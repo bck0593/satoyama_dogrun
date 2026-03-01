@@ -1,0 +1,267 @@
+[
+  {
+    "id": "event-tgf-2025",
+    "slug": "tiny-garden-festival-2025",
+    "title": "TINY GARDEN FESTIVAL ASICS SATOYAMA STADIUM 2025 イベント情報",
+    "summary": "アシックス里山スタジアム全体を舞台に、衣・食・住・遊を味わえる2日間のガーデンフェスティバル。キャンプ泊やワークショップ、マーケットで特別なスタジアム体験を楽しめます。",
+    "body_md": "# イベント概要\n親子で楽しめる\"衣・食・住・遊\"のプログラムがそろう、年に一度の野外フェスティバルです。しまなみの海を望むスタジアム全体を活用し、音楽やアクティビティ、マーケットが一体となって賑わいます。\n\n## 開催日時\n- 2025年10月25日(土) 10:00〜21:00\n- 2025年10月26日(日) 10:00〜19:00\n\n## 体験コンテンツ\n- スタジアム内キャンプ泊 (最大6名／サイト)\n- 焚き火ラウンジや里山サウナなどのナイトプログラム\n- アクティビティ、ワークショップ、縁日コンテンツ\n- マーケット＆フードエリアでの限定出店\n\n## 特別プログラム\n- 鈍川温泉の足湯＆ハンドマッサージ (宿泊者限定)\n- 今治の名店「しの田」と漁師・藤本純一氏のスペシャルモーニング (限定20食)\n\n## 申込・参加について\nイベントへの参加は無料です。キャンプ泊や有料コンテンツは事前予約制のため、ページ下部の申込みフォームからお申し込みください。",
+    "hero_image_url": "https://fcimabari-community.com/wp-content/uploads/2025/08/TGF25atIMABARI_KV02-1920-1280px.jpg",
+    "start_at": "2025-10-25T10:00:00+09:00",
+    "end_at": "2025-10-26T21:00:00+09:00",
+    "provider_id": "tgf",
+    "category": {
+      "id": "festival",
+      "name": "フェスティバル",
+      "slug": "festival"
+    },
+    "tags": [
+      {
+        "id": "tag-festival",
+        "name": "フェス",
+        "slug": "festival"
+      },
+      {
+        "id": "tag-camp",
+        "name": "キャンプ",
+        "slug": "camp"
+      },
+      {
+        "id": "tag-market",
+        "name": "マーケット",
+        "slug": "market"
+      }
+    ],
+    "venue": {
+      "name": "アシックス里山スタジアム",
+      "address": "愛媛県今治市高橋ふれあいの丘1-3"
+    },
+    "application_type": "internal_form"
+  },
+  {
+    "id": "event-tgf-market-2025",
+    "slug": "tiny-garden-market-2025",
+    "title": "TINY GARDEN FESTIVAL 2025 マーケットエリア情報公開・キャンプサイト追加販売",
+    "summary": "新名称「TINY GARDEN by URBAN RESEARCH」がお披露目され、スタジアムキャンプの追加区画や限定ワークショップの詳細が公開されました。",
+    "body_md": "# マーケットエリアの見どころ\nお披露目となる\"TINY GARDEN by URBAN RESEARCH\"では、日中はアクティビティとワークショップ、夜は里山の小さな縁日を開催します。ペット同伴サイトの新設や、瀬戸内の人気店によるフードエリアなど、幅広い楽しみが用意されています。\n\n## キャンプサイト情報\n- スタジアム ゴール裏（北・南）／バックスタンドの各サイト\n- しまなみの海を望む「里山プラザ」追加販売が決定\n- ペットと泊まれる専用サイトを設置\n\n## 宿泊者向け特典\n- アーバンリサーチによるペット撮影会\n- 鈍川温泉の足湯とハンドマッサージ\n- 今治の名店と漁師が手がける限定モーニング\n\n## 参加方法\nキャンプ泊・ワークショップは事前予約制です。希望メニューを選択のうえ、申込みフォームからお申し込みください。",
+    "hero_image_url": "https://fcimabari-community.com/wp-content/uploads/2025/09/LINE_ALBUM_TGF0918KV_250918_1-2.jpg",
+    "start_at": "2025-10-25T10:00:00+09:00",
+    "end_at": "2025-10-26T21:00:00+09:00",
+    "provider_id": "tgf",
+    "category": {
+      "id": "market",
+      "name": "マーケット",
+      "slug": "market"
+    },
+    "tags": [
+      {
+        "id": "tag-workshop",
+        "name": "ワークショップ",
+        "slug": "workshop"
+      },
+      {
+        "id": "tag-pet",
+        "name": "ペット同伴",
+        "slug": "pet"
+      },
+      {
+        "id": "tag-night",
+        "name": "ナイトプログラム",
+        "slug": "night"
+      }
+    ],
+    "venue": {
+      "name": "TINY GARDEN by URBAN RESEARCH",
+      "address": "愛媛県今治市高橋ふれあいの丘1-3"
+    },
+    "application_type": "internal_form"
+  },
+  {
+    "id": "event-tiny-garden-opening",
+    "slug": "tiny-garden-by-urban-research-opening",
+    "title": "アシックス里山スタジアムに「TINY GARDEN by URBAN RESEARCH」が誕生",
+    "summary": "里山サロン裏庭のネーミングライツ取得により、365日の賑わいを生み出す交流拠点がスタート。秋には新たなシンボル空間もお披露目予定です。",
+    "body_md": "# 新しい交流拠点がスタート\nアシックス里山スタジアムの里山ジャルダンエリアが、アーバンリサーチのネーミングライツ取得により\"TINY GARDEN by URBAN RESEARCH\"として生まれ変わります。日常的に人が集い、自然とふれあい、心を整えられる開かれた場所を目指します。\n\n## 取り組みの背景\n- 2021年から続くFC今治とアーバンリサーチの協働プロジェクト\n- スタジアムを365日賑わうエリアにするための共創\n- 地域に開かれた多目的広場として世代を超えた交流を創出\n\n## 今後予定されていること\n- 2025年秋に新しいシンボル空間を設置\n- TINY GARDEN FESTIVAL 2025 に合わせたお披露目イベント\n- 誰もが気軽に利用できる遊具・休憩スペースの整備\n\n## 施設概要\n- 所在地：愛媛県今治市高橋ふれあいの丘1-3 アシックス里山スタジアム内\n- 設備：多目的広場、遊具、イベント・休憩スペース\n- 申込み不要でどなたでも自由にご利用いただけます。",
+    "hero_image_url": "https://fcimabari-community.com/wp-content/uploads/2025/09/2024_tgf_imabari_641.jpg",
+    "start_at": "2025-10-25T09:00:00+09:00",
+    "end_at": "2025-10-25T17:00:00+09:00",
+    "provider_id": "fcimabari",
+    "category": {
+      "id": "community",
+      "name": "コミュニティ",
+      "slug": "community"
+    },
+    "tags": [
+      {
+        "id": "tag-urban-research",
+        "name": "アーバンリサーチ",
+        "slug": "urban-research"
+      },
+      {
+        "id": "tag-community",
+        "name": "交流拠点",
+        "slug": "community"
+      },
+      {
+        "id": "tag-satoyama",
+        "name": "里山",
+        "slug": "satoyama"
+      }
+    ],
+    "venue": {
+      "name": "TINY GARDEN by URBAN RESEARCH",
+      "address": "愛媛県今治市高橋ふれあいの丘1-3"
+    },
+    "application_type": "internal_form"
+  },
+  {
+    "id": "event-asisato-trial-2025",
+    "slug": "asisato-club-trial-2025",
+    "title": "アシさとクラブ会員プログラムのトライアル開始！",
+    "summary": "アシさとクラブの新しい会員アプリを試行導入。トークン獲得や限定イベント招待など、クラブ活動をもっと楽しめる仕組みを3か月間体験できます。",
+    "body_md": "# トライアル概要\nアシさとクラブの会員システムを期間限定でトライアル実施。活動参加やゲーム結果に応じて\"アシさとトークン\"を獲得し、限定イベントやオリジナルグッズと交換できます。\n\n## 期間\n- 2025年8月25日(月) 〜 11月30日(日)\n\n## トークンでできること\n- 有名アスリートによる有料イベントへの優先／無料参加\n- オリジナルグッズとの交換\n- 会員全体のトークンが一定数に達すると\"アシさとクラブパーティー\"を開催予定\n\n## 申込みの流れ\n1. 会員アプリにアクセスして仮登録\n2. イベント参加時にデジタルパスを取得\n3. 参加履歴に応じてトークンが付与されます\n\n## 注意事項\n- みちくさんぽ等のイベント申込は順次アプリに移行します\n- 通常クラスの申込は従来通り e-moshicom でも受付\n\n気になる方はフォームから仮会員登録をお願いします。",
+    "hero_image_url": "https://fcimabari-community.com/wp-content/uploads/2025/09/NFT.png",
+    "start_at": "2025-08-25T09:00:00+09:00",
+    "end_at": "2025-11-30T18:00:00+09:00",
+    "provider_id": "asisato",
+    "category": {
+      "id": "membership",
+      "name": "会員プログラム",
+      "slug": "membership"
+    },
+    "tags": [
+      {
+        "id": "tag-digital-pass",
+        "name": "デジタルパス",
+        "slug": "digital-pass"
+      },
+      {
+        "id": "tag-token",
+        "name": "トークン",
+        "slug": "token"
+      },
+      {
+        "id": "tag-workshop-series",
+        "name": "クラブ活動",
+        "slug": "club"
+      }
+    ],
+    "venue": {
+      "name": "アシックス里山スタジアム",
+      "address": "愛媛県今治市高橋ふれあいの丘1-3"
+    },
+    "application_type": "internal_form"
+  },
+  {
+    "id": "event-satoyama-playground-2025",
+    "slug": "satoyama-playground-workshop-2025",
+    "title": "里山ジャルダンの小さな遊具をみんなで再生させよう！",
+    "summary": "アーバンリサーチと一緒に、里山ジャルダンの木製遊具を彩るワークショップを開催。色塗りと記念コースターづくりで新しい賑わい拠点づくりに参加できます。",
+    "body_md": "# ワークショップ内容\n里山ジャルダンにある木の平均台や丸太を、自分たちの手で色鮮やかにリペイントします。\"自分で手をかけた遊具\"が完成する体験は子どもたちにとって特別な思い出になります。\n\n## 開催日時\n- 2025年9月6日(土) 10:00〜15:00\n  - 午前の部 10:00〜12:00\n  - 午後の部 13:00〜14:30\n\n## プログラム\n- 木製遊具の色塗りワークショップ (参加無料)\n- 丸太コースターへのロゴ転写体験 (参加費 550円／当日受付)\n\n## 会場\nアシックス里山スタジアム 里山ジャルダン（里山サロン裏庭）\n\n## ご参加にあたって\n- 汚れても構わない服装でお越しください\n- 活動の様子を広報で使用する場合があります\n- 小雨決行、荒天中止です\n\n地域と一緒に、新しい交流拠点づくりに参加しましょう。",
+    "hero_image_url": "https://fcimabari-community.com/wp-content/uploads/2025/08/IMG_9239.jpg",
+    "start_at": "2025-09-06T10:00:00+09:00",
+    "end_at": "2025-09-06T15:00:00+09:00",
+    "provider_id": "fcimabari",
+    "category": {
+      "id": "workshop",
+      "name": "ワークショップ",
+      "slug": "workshop"
+    },
+    "tags": [
+      {
+        "id": "tag-family",
+        "name": "ファミリー",
+        "slug": "family"
+      },
+      {
+        "id": "tag-diy",
+        "name": "DIY",
+        "slug": "diy"
+      },
+      {
+        "id": "tag-color",
+        "name": "リペイント",
+        "slug": "repaint"
+      }
+    ],
+    "venue": {
+      "name": "里山ジャルダン (アシックス里山スタジアム)",
+      "address": "愛媛県今治市高橋ふれあいの丘1-3"
+    },
+    "application_type": "internal_form"
+  },
+  {
+    "id": "event-art-venture-2025",
+    "slug": "art-venture-ehime-fes-2025",
+    "title": "art venture ehime fes 2025 今治エリア・里山ゾーン",
+    "summary": "愛媛県と東京藝術大学が手がけるアートフェスティバル。里山ゾーンでは音楽やサーカス、パフォーマンスを通じた新しい出会いと賑わいを創出します。",
+    "body_md": "# フェスティバル概要\n県内4エリア・8ゾーンで開催される\"art venture ehime fes 2025\"に、アシックス里山スタジアムが今治市・里山ゾーンとして参加します。アートを通じて地域の未来を描く取り組みです。\n\n## 会期\n- 2025年10月18日(土) 〜 11月3日(月・祝)\n\n## 里山ゾーン参加アーティスト\n- FC今治高等学校里山校 Music Class\n- 来島会 with 瀬戸内サーカスファクトリー\n- 五十嵐 裕美\n\n## 見どころ\n- 音楽・パフォーマンス・サーカスによるライブプログラム\n- 里山の自然を舞台にした参加型アート\n- ホームゲームや地域イベントとの連動企画を予定\n\n## プロジェクトについて\nart venture ehime は、アートコミュニケータ「ひめラー」を中心に地域課題へ取り組むアートコミュニケーションプロジェクト。文化芸術に親しむ機会を創出し、新たな価値と関係を生み出します。",
+    "start_at": "2025-10-18T10:00:00+09:00",
+    "end_at": "2025-11-03T18:00:00+09:00",
+    "provider_id": "fcimabari",
+    "category": {
+      "id": "art",
+      "name": "アート",
+      "slug": "art"
+    },
+    "tags": [
+      {
+        "id": "tag-art",
+        "name": "アート",
+        "slug": "art"
+      },
+      {
+        "id": "tag-performance",
+        "name": "パフォーマンス",
+        "slug": "performance"
+      },
+      {
+        "id": "tag-fes",
+        "name": "フェスティバル",
+        "slug": "festival-art"
+      }
+    ],
+    "venue": {
+      "name": "アシックス里山スタジアム",
+      "address": "愛媛県今治市高橋ふれあいの丘1-3"
+    },
+    "application_type": "internal_form"
+  },
+  {
+    "id": "event-satoyama-belt-runs-2025",
+    "slug": "satoyama-belt-runs-workshop-2025",
+    "title": "Satoyama Belt runs ワークショップ",
+    "summary": "art venture ehime fes 2025 に出展される大型作品を、アーティスト五十嵐裕美と一緒に制作。だれでも参加できる無料ワークショップです。",
+    "body_md": "# ワークショップ概要\nアシックス里山スタジアムを彩るアート作品\"Satoyama Belt runs\"に、自分の描いたモチーフをアップデートする参加型ワークショップ。完成した作品はフェス期間中に展示されます。\n\n## 開催日時\n- 2025年8月24日(日)\n  - 第1回 13:00〜14:00\n  - 第2回 14:30〜15:30\n\n## 募集要項\n- 定員：各回10組（先着順）※1組2名まで参加可\n- 対象：年齢・性別不問。親子参加も大歓迎\n- 参加費：無料\n- 持ち物：不要\n\n## 申込み\n- 受付期間：2025年8月20日(水) 17:00 まで\n- 申込フォーム：記事記載のGoogleフォームよりお申し込みください\n- 先着順のため、参加確定の方には8月21日(木)までにメールにてご連絡します\n\n## お問い合わせ\n- art venture ehime 事務局 (contact@artventureehime.com)",
+    "hero_image_url": "https://fcimabari-community.com/wp-content/uploads/2025/08/4E8567C7-3F5E-4F3D-A4C0-FA19CCD4E347.jpg",
+    "start_at": "2025-08-24T13:00:00+09:00",
+    "end_at": "2025-08-24T15:30:00+09:00",
+    "provider_id": "fcimabari",
+    "category": {
+      "id": "art-workshop",
+      "name": "アートワークショップ",
+      "slug": "art-workshop"
+    },
+    "tags": [
+      {
+        "id": "tag-workshop-art",
+        "name": "作品づくり",
+        "slug": "art-making"
+      },
+      {
+        "id": "tag-community-art",
+        "name": "コミュニティアート",
+        "slug": "community-art"
+      },
+      {
+        "id": "tag-free",
+        "name": "参加無料",
+        "slug": "free"
+      }
+    ],
+    "venue": {
+      "name": "アシックス里山スタジアム",
+      "address": "愛媛県今治市高橋ふれあいの丘1-3"
+    },
+    "application_type": "internal_form"
+  }
+]

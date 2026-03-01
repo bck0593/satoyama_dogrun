@@ -1,0 +1,69 @@
+[
+  {
+    "id": "r1",
+    "slug": "tiny-garden-festival-2023-report",
+    "title": "TINY GARDEN FESTIVAL 2023 開催レポート",
+    "body_md": "# TINY GARDEN FESTIVAL 2023 開催レポート\n\n2023年5月に開催されたTINY GARDEN FESTIVALは、天候にも恵まれ大成功でした。\n\n## 来場者数\n約2,000名の方にご来場いただきました。\n\n## 出演アーティスト\n地元今治から全国で活動するアーティストまで、15組が出演しました。\n\n## 来年に向けて\n来年はさらに規模を拡大して開催予定です。",
+    "hero_image_url": "/outdoor-music-festival-crowd-enjoying-performance.jpg",
+    "published_at": "2023-05-20T10:00:00+09:00",
+    "provider_id": "tiny-garden",
+    "event_slug": "tiny-garden-festival-2024",
+    "tags": [{ "id": "t1", "name": "音楽", "slug": "music" }, { "id": "t3", "name": "フェス", "slug": "festival" }]
+  },
+  {
+    "id": "r2",
+    "slug": "fc-imabari-youth-success",
+    "title": "FC今治ユースサッカー教室 大盛況",
+    "body_md": "# FC今治ユースサッカー教室 大盛況\n\n先日開催されたFC今治ユースサッカー教室には、50名を超える子どもたちが参加しました。\n\n## 参加者の声\n「プロの選手に直接教えてもらえて嬉しかった」\n「また参加したい」\n\n## 次回開催予定\n次回は夏休み期間中に開催予定です。",
+    "hero_image_url": "/placeholder.svg?height=200&width=300",
+    "published_at": "2024-03-15T14:00:00+09:00",
+    "provider_id": "fc-imabari",
+    "tags": [{ "id": "t6", "name": "サッカー", "slug": "soccer" }, { "id": "t7", "name": "キッズ", "slug": "kids" }]
+  },
+  {
+    "id": "r3",
+    "slug": "wooden-toy-museum-opening",
+    "title": "しまなみ木のおもちゃ美術館 オープン1周年",
+    "body_md": "# しまなみ木のおもちゃ美術館 オープン1周年\n\nおかげさまで、しまなみ木のおもちゃ美術館はオープンから1周年を迎えました。\n\n## この1年の歩み\n- 来館者数：延べ15,000名\n- ワークショップ開催：月2回\n- 地域との連携イベント：10回\n\n## 今後の展望\n地域の木材を活用した新しい体験プログラムを企画中です。",
+    "hero_image_url": "/placeholder.svg?height=200&width=300",
+    "published_at": "2024-03-01T10:00:00+09:00",
+    "provider_id": "wooden-toy-museum",
+    "tags": [{ "id": "t7", "name": "キッズ", "slug": "kids" }, { "id": "t11", "name": "木工", "slug": "woodwork" }]
+  },
+  {
+    "id": "r4",
+    "slug": "satoyama-spring-report",
+    "title": "春の里山散策ツアー 開催報告",
+    "body_md": "# 春の里山散策ツアー 開催報告\n\n桜が満開の中、春の里山散策ツアーを開催しました。\n\n## 見どころ\n- 満開の山桜\n- 野鳥のさえずり\n- 新緑の美しさ\n\n## 参加者の感想\n「普段見ることのできない今治の自然を堪能できました」\n「ガイドさんの説明がとても分かりやすかった」",
+    "hero_image_url": "/placeholder.svg?height=200&width=300",
+    "published_at": "2024-04-10T16:00:00+09:00",
+    "provider_id": "satoyama-salon",
+    "tags": [{ "id": "t12", "name": "自然", "slug": "nature" }, { "id": "t14", "name": "里山", "slug": "satoyama" }]
+  },
+  {
+    "id": "r5",
+    "slug": "dog-run-winter-event",
+    "title": "冬のドッグラン交流会 レポート",
+    "body_md": "# 冬のドッグラン交流会 レポート\n\n寒い中でしたが、多くの愛犬家の皆様にご参加いただきました。\n\n## 参加犬種\n- 柴犬\n- ゴールデンレトリバー\n- トイプードル\n- ミックス犬\n\n## 交流の様子\n犬同士はもちろん、飼い主同士の情報交換も活発に行われました。",
+    "hero_image_url": "/placeholder.svg?height=200&width=300",
+    "published_at": "2024-02-15T12:00:00+09:00",
+    "provider_id": "dog-run",
+    "tags": [
+      { "id": "t4", "name": "ドッグラン", "slug": "dog-run" },
+      { "id": "t5", "name": "交流会", "slug": "meetup" }
+    ]
+  },
+  {
+    "id": "r6",
+    "slug": "asisato-community-activities",
+    "title": "あじさとクラブの地域活動紹介",
+    "body_md": "# あじさとクラブの地域活動紹介\n\nあじさとクラブでは、様々な地域活動を行っています。\n\n## 主な活動\n- 月1回の清掃活動\n- 高齢者向けサロン\n- 子育て支援イベント\n- 地域の歴史調査\n\n## 参加者募集\n地域をより良くする活動に参加してみませんか？",
+    "hero_image_url": "/community-volunteers-cleaning-up-park.jpg",
+    "published_at": "2024-03-20T09:00:00+09:00",
+    "provider_id": "asisato-club",
+    "tags": [
+      { "id": "t10", "name": "コミュニティ", "slug": "community" },
+      { "id": "t16", "name": "地域", "slug": "local" }
+    ]
+  }
+]

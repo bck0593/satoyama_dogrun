@@ -1,0 +1,13 @@
+﻿Django>=5.1,<5.2
+djangorestframework>=3.15,<3.16
+djangorestframework-simplejwt>=5.4,<5.5
+django-cors-headers>=4.6,<4.7
+dj-database-url>=2.3,<2.4
+psycopg[binary]>=3.2,<3.3
+Pillow>=11.1,<11.2
+requests>=2.32,<2.33
+stripe>=11.5,<11.6
+gunicorn>=23.0,<23.1
+python-dotenv>=1.0,<1.1
+django-storages[azure]>=1.14,<1.15
+opencensus-ext-azure>=1.1,<1.2

@@ -1,0 +1,52 @@
+{
+  "slots": [
+    {
+      "date": "2024-01-15",
+      "time": "09:00",
+      "capacity": 20,
+      "reserved": 8
+    },
+    {
+      "date": "2024-01-15",
+      "time": "11:00",
+      "capacity": 20,
+      "reserved": 15
+    },
+    {
+      "date": "2024-01-15",
+      "time": "13:00",
+      "capacity": 20,
+      "reserved": 12
+    },
+    {
+      "date": "2024-01-15",
+      "time": "15:00",
+      "capacity": 20,
+      "reserved": 5
+    },
+    {
+      "date": "2024-01-16",
+      "time": "09:00",
+      "capacity": 20,
+      "reserved": 3
+    },
+    {
+      "date": "2024-01-16",
+      "time": "11:00",
+      "capacity": 20,
+      "reserved": 7
+    },
+    {
+      "date": "2024-01-16",
+      "time": "13:00",
+      "capacity": 20,
+      "reserved": 18
+    },
+    {
+      "date": "2024-01-16",
+      "time": "15:00",
+      "capacity": 20,
+      "reserved": 10
+    }
+  ]
+}

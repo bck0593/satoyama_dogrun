@@ -1,0 +1,25 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.sqlite3.local
+.venv/
+
+# Django
+backend/staticfiles/
+backend/media/
+
+# Node
+frontend/node_modules/
+frontend/.next/
+frontend/.turbo/
+
+# Env
+*.env
+!.env.example
+backend/.env
+frontend/.env.local
+
+# OS
+.DS_Store
+Thumbs.db

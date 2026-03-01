@@ -1,0 +1,30 @@
+[
+  {
+    "id": "fcimabari",
+    "name": "FC今治コミュニティ",
+    "url": "https://fcimabari-community.com/",
+    "category": "サッカー",
+    "logo_url": "/placeholder.svg?height=40&width=40"
+  },
+  {
+    "id": "tgf",
+    "name": "TINY GARDEN FESTIVAL",
+    "url": "https://media.urban-research.jp/feature/tgf_imabari/",
+    "category": "音楽・フェス",
+    "logo_url": "/placeholder.svg?height=40&width=40"
+  },
+  {
+    "id": "asisato",
+    "name": "あじさとクラブ",
+    "url": "https://asisato-club.com/",
+    "category": "コミュニティ",
+    "logo_url": "/placeholder.svg?height=40&width=40"
+  },
+  {
+    "id": "dogrun",
+    "name": "大島ドッグラン",
+    "url": "https://app-002-gen10-step3-2-node-oshima13.azurewebsites.net/",
+    "category": "ペット",
+    "logo_url": "/placeholder.svg?height=40&width=40"
+  }
+]

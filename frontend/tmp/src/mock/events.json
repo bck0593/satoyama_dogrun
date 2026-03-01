@@ -1,0 +1,273 @@
+[
+  {
+    "id": "e1",
+    "slug": "tiny-garden-festival-2024",
+    "title": "TINY GARDEN FESTIVAL 2024",
+    "summary": "今治の自然の中で開催される音楽フェスティバル",
+    "hero_image_url": "/placeholder.svg?height=200&width=300",
+    "start_at": "2024-05-15T10:00:00+09:00",
+    "end_at": "2024-05-15T20:00:00+09:00",
+    "provider_id": "tgf",
+    "application_type": "internal_form",
+    "venue": {
+      "name": "今治市民の森",
+      "address": "愛媛県今治市山路町",
+      "lat": 34.0658,
+      "lng": 132.9972
+    },
+    "category": {
+      "id": "c1",
+      "name": "音楽・フェス",
+      "slug": "music-festival"
+    },
+    "tags": [
+      { "id": "t1", "name": "音楽", "slug": "music" },
+      { "id": "t2", "name": "野外", "slug": "outdoor" },
+      { "id": "t3", "name": "フェス", "slug": "festival" }
+    ],
+    "report_slugs": ["tiny-garden-festival-2023-report"]
+  },
+  {
+    "id": "e2",
+    "slug": "fc-imabari-youth-soccer",
+    "title": "FC今治ユースサッカー教室",
+    "summary": "プロ選手による子どもたちへのサッカー指導",
+    "hero_image_url": "/placeholder.svg?height=200&width=300",
+    "start_at": "2024-04-25T14:00:00+09:00",
+    "end_at": "2024-04-25T17:00:00+09:00",
+    "provider_id": "fcimabari",
+    "application_type": "internal_form",
+    "venue": {
+      "name": "ありがとうサービス.夢スタジアム",
+      "address": "愛媛県今治市山路町",
+      "lat": 34.0658,
+      "lng": 132.9972
+    },
+    "category": {
+      "id": "c3",
+      "name": "スポーツ",
+      "slug": "sports"
+    },
+    "tags": [
+      { "id": "t6", "name": "サッカー", "slug": "soccer" },
+      { "id": "t7", "name": "キッズ", "slug": "kids" },
+      { "id": "t8", "name": "教室", "slug": "lesson" }
+    ]
+  },
+  {
+    "id": "e3",
+    "slug": "dog-run-spring-event",
+    "title": "春のドッグラン交流会",
+    "summary": "愛犬と一緒に楽しむ春の交流イベント",
+    "hero_image_url": "/placeholder.svg?height=200&width=300",
+    "start_at": "2024-04-20T09:00:00+09:00",
+    "end_at": "2024-04-20T16:00:00+09:00",
+    "provider_id": "dogrun",
+    "application_type": "internal_form",
+    "venue": {
+      "name": "大島ドッグラン",
+      "address": "愛媛県今治市大島町",
+      "lat": 34.0833,
+      "lng": 133.0167
+    },
+    "category": {
+      "id": "c2",
+      "name": "ペット",
+      "slug": "pet"
+    },
+    "tags": [
+      { "id": "t4", "name": "ドッグラン", "slug": "dog-run" },
+      { "id": "t5", "name": "交流会", "slug": "meetup" },
+      { "id": "t2", "name": "野外", "slug": "outdoor" }
+    ]
+  },
+  {
+    "id": "e4",
+    "slug": "asisato-community-festival",
+    "title": "あじさとコミュニティ祭り",
+    "summary": "地域住民による手作りのお祭り",
+    "hero_image_url": "/placeholder.svg?height=200&width=300",
+    "start_at": "2024-05-12T11:00:00+09:00",
+    "end_at": "2024-05-12T17:00:00+09:00",
+    "provider_id": "asisato",
+    "application_type": "internal_form",
+    "venue": {
+      "name": "朝倉公民館",
+      "address": "愛媛県今治市朝倉南甲",
+      "lat": 34.0333,
+      "lng": 132.9667
+    },
+    "category": {
+      "id": "c6",
+      "name": "地域イベント",
+      "slug": "community"
+    },
+    "tags": [
+      { "id": "t10", "name": "コミュニティ", "slug": "community" },
+      { "id": "t15", "name": "お祭り", "slug": "festival" },
+      { "id": "t16", "name": "地域", "slug": "local" }
+    ]
+  },
+  {
+    "id": "e5",
+    "slug": "tgf-workshop-music",
+    "title": "TGF音楽ワークショップ",
+    "summary": "プロミュージシャンによる楽器体験教室",
+    "hero_image_url": "/placeholder.svg?height=200&width=300",
+    "start_at": "2024-05-01T13:00:00+09:00",
+    "end_at": "2024-05-01T16:00:00+09:00",
+    "provider_id": "tgf",
+    "application_type": "internal_form",
+    "venue": {
+      "name": "今治市民会館",
+      "address": "愛媛県今治市別宮町1-4-1",
+      "lat": 34.0667,
+      "lng": 132.9972
+    },
+    "category": {
+      "id": "c4",
+      "name": "ワークショップ",
+      "slug": "workshop"
+    },
+    "tags": [
+      { "id": "t1", "name": "音楽", "slug": "music" },
+      { "id": "t9", "name": "ワークショップ", "slug": "workshop" },
+      { "id": "t7", "name": "キッズ", "slug": "kids" }
+    ]
+  },
+  {
+    "id": "e6",
+    "slug": "asisato-cooking-class",
+    "title": "あじさと料理教室",
+    "summary": "地元食材を使った家庭料理教室",
+    "hero_image_url": "/placeholder.svg?height=200&width=300",
+    "start_at": "2024-04-30T10:00:00+09:00",
+    "end_at": "2024-04-30T14:00:00+09:00",
+    "provider_id": "asisato",
+    "application_type": "internal_form",
+    "venue": {
+      "name": "朝倉公民館調理室",
+      "address": "愛媛県今治市朝倉南甲",
+      "lat": 34.0333,
+      "lng": 132.9667
+    },
+    "category": {
+      "id": "c4",
+      "name": "ワークショップ",
+      "slug": "workshop"
+    },
+    "tags": [
+      { "id": "t17", "name": "料理", "slug": "cooking" },
+      { "id": "t9", "name": "ワークショップ", "slug": "workshop" },
+      { "id": "t16", "name": "地域", "slug": "local" }
+    ]
+  },
+  {
+    "id": "e7",
+    "slug": "dogrun-training-session",
+    "title": "ドッグトレーニング講座",
+    "summary": "愛犬のしつけとトレーニング方法を学ぶ",
+    "hero_image_url": "/placeholder.svg?height=200&width=300",
+    "start_at": "2024-05-05T10:00:00+09:00",
+    "end_at": "2024-05-05T12:00:00+09:00",
+    "provider_id": "dogrun",
+    "application_type": "internal_form",
+    "venue": {
+      "name": "大島ドッグラン",
+      "address": "愛媛県今治市大島町",
+      "lat": 34.0833,
+      "lng": 133.0167
+    },
+    "category": {
+      "id": "c2",
+      "name": "ペット",
+      "slug": "pet"
+    },
+    "tags": [
+      { "id": "t4", "name": "ドッグラン", "slug": "dog-run" },
+      { "id": "t8", "name": "教室", "slug": "lesson" },
+      { "id": "t18", "name": "トレーニング", "slug": "training" }
+    ]
+  },
+  {
+    "id": "e8",
+    "slug": "fc-imabari-fan-meeting",
+    "title": "FC今治ファンミーティング",
+    "summary": "選手とファンの交流イベント",
+    "hero_image_url": "/placeholder.svg?height=200&width=300",
+    "start_at": "2024-05-18T18:00:00+09:00",
+    "end_at": "2024-05-18T20:00:00+09:00",
+    "provider_id": "fcimabari",
+    "application_type": "internal_form",
+    "venue": {
+      "name": "今治市民会館",
+      "address": "愛媛県今治市別宮町1-4-1",
+      "lat": 34.0667,
+      "lng": 132.9972
+    },
+    "category": {
+      "id": "c3",
+      "name": "スポーツ",
+      "slug": "sports"
+    },
+    "tags": [
+      { "id": "t6", "name": "サッカー", "slug": "soccer" },
+      { "id": "t5", "name": "交流会", "slug": "meetup" },
+      { "id": "t19", "name": "ファン", "slug": "fan" }
+    ]
+  },
+  {
+    "id": "e9",
+    "slug": "tgf-artist-talk",
+    "title": "TGFアーティストトークセッション",
+    "summary": "出演アーティストによるトークイベント",
+    "hero_image_url": "/placeholder.svg?height=200&width=300",
+    "start_at": "2024-05-10T19:00:00+09:00",
+    "end_at": "2024-05-10T21:00:00+09:00",
+    "provider_id": "tgf",
+    "application_type": "internal_form",
+    "venue": {
+      "name": "今治市民会館小ホール",
+      "address": "愛媛県今治市別宮町1-4-1",
+      "lat": 34.0667,
+      "lng": 132.9972
+    },
+    "category": {
+      "id": "c1",
+      "name": "音楽・フェス",
+      "slug": "music-festival"
+    },
+    "tags": [
+      { "id": "t1", "name": "音楽", "slug": "music" },
+      { "id": "t20", "name": "トーク", "slug": "talk" },
+      { "id": "t21", "name": "アーティスト", "slug": "artist" }
+    ]
+  },
+  {
+    "id": "e10",
+    "slug": "asisato-volunteer-day",
+    "title": "あじさとボランティアデー",
+    "summary": "地域清掃と環境保護活動",
+    "hero_image_url": "/placeholder.svg?height=200&width=300",
+    "start_at": "2024-04-27T08:00:00+09:00",
+    "end_at": "2024-04-27T11:00:00+09:00",
+    "provider_id": "asisato",
+    "application_type": "internal_form",
+    "venue": {
+      "name": "朝倉地区各所",
+      "address": "愛媛県今治市朝倉",
+      "lat": 34.0333,
+      "lng": 132.9667
+    },
+    "category": {
+      "id": "c6",
+      "name": "地域イベント",
+      "slug": "community"
+    },
+    "tags": [
+      { "id": "t10", "name": "コミュニティ", "slug": "community" },
+      { "id": "t22", "name": "ボランティア", "slug": "volunteer" },
+      { "id": "t23", "name": "清掃", "slug": "cleanup" }
+    ]
+  }
+]
