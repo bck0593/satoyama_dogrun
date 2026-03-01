@@ -14,6 +14,7 @@
 
 export type Dog = {
   id: number;
+  owner: number;
   name: string;
   breed: string;
   breed_group: string | null;
@@ -88,6 +89,37 @@ export type CurrentStats = {
   breed_counts: Array<{ breed: string; count: number }>;
   breeds: Array<{ breed: string; count: number }>;
   dogs?: Array<{ dog_name: string; breed: string; size_category: "small" | "medium" | "large" }>;
+};
+
+export type HomeHeroSlide = {
+  id: number;
+  title: string;
+  description: string;
+  image: string;
+  image_url: string;
+  alt_text: string;
+  display_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type HomeHeroSlideCreateInput = {
+  title: string;
+  description?: string;
+  alt_text?: string;
+  display_order: number;
+  is_active: boolean;
+  image: File;
+};
+
+export type HomeHeroSlideUpdateInput = {
+  title?: string;
+  description?: string;
+  alt_text?: string;
+  display_order?: number;
+  is_active?: boolean;
+  image?: File | null;
 };
 
 export type BreedStatsPeriod = "daily" | "monthly" | "realtime";

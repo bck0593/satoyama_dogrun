@@ -5,6 +5,9 @@ import type {
   BreedStatsResponse,
   CurrentStats,
   Dog,
+  HomeHeroSlide,
+  HomeHeroSlideCreateInput,
+  HomeHeroSlideUpdateInput,
   PaymentHistoryItem,
   Reservation,
   SlotAvailability,
@@ -318,6 +321,10 @@ export const apiClient = {
     return apiRequest<BreedStatsResponse>(`/stats/breeds?${params.toString()}`, { auth: false });
   },
 
+  async getHomeHeroSlides() {
+    return apiRequest<HomeHeroSlide[]>("/content/home-hero-slides", { auth: false });
+  },
+
   async getAdminDashboard() {
     return apiRequest<{
       today_date: string;
@@ -342,6 +349,49 @@ export const apiClient = {
   async getAdminDogs() {
     const payload = await apiRequest<Dog[] | { results: Dog[] }>("/admin/dogs/");
     return asList(payload);
+  },
+
+  async getAdminHomeHeroSlides() {
+    const payload = await apiRequest<HomeHeroSlide[] | { results: HomeHeroSlide[] }>("/admin/home-hero-slides/");
+    return asList(payload);
+  },
+
+  async createAdminHomeHeroSlide(input: HomeHeroSlideCreateInput) {
+    const formData = new FormData();
+    formData.append("title", input.title);
+    if (input.description) formData.append("description", input.description);
+    if (input.alt_text) formData.append("alt_text", input.alt_text);
+    formData.append("display_order", String(input.display_order));
+    formData.append("is_active", String(input.is_active));
+    formData.append("image", input.image);
+    return apiFormRequest<HomeHeroSlide>("/admin/home-hero-slides/", formData, "POST");
+  },
+
+  async updateAdminHomeHeroSlide(slideId: number, input: HomeHeroSlideUpdateInput) {
+    const formData = new FormData();
+    Object.entries(input).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      if (value instanceof File) {
+        formData.append(key, value);
+      } else {
+        formData.append(key, String(value));
+      }
+    });
+    return apiFormRequest<HomeHeroSlide>(`/admin/home-hero-slides/${slideId}/`, formData, "PATCH");
+  },
+
+  async deleteAdminHomeHeroSlide(slideId: number) {
+    return apiRequest<void>(`/admin/home-hero-slides/${slideId}/`, { method: "DELETE" });
+  },
+
+  async reviewAdminDogVaccine(
+    dogId: number,
+    input: { vaccine_approval_status: "approved" | "rejected"; vaccine_review_note?: string },
+  ) {
+    return apiRequest<Dog>(`/admin/dogs/${dogId}/review_vaccine/`, {
+      method: "POST",
+      body: input,
+    });
   },
 
   async getAdminReservations() {

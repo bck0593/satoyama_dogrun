@@ -16,7 +16,7 @@ from apps.reservations.views import (
     ReservationAvailabilityView,
     ReservationViewSet,
 )
-from apps.stats.views import AdminDashboardView, BreedStatsView, CurrentStatsView
+from apps.stats.views import AdminDashboardView, AdminHomeHeroSlideViewSet, BreedStatsView, CurrentStatsView, HomeHeroSlideView
 
 router = DefaultRouter()
 router.register("dogs", DogViewSet, basename="dogs")
@@ -26,12 +26,14 @@ router.register("admin/dogs", AdminDogViewSet, basename="admin-dogs")
 router.register("admin/reservations", AdminReservationViewSet, basename="admin-reservations")
 router.register("admin/checkins", CheckinLogViewSet, basename="admin-checkins")
 router.register("admin/restricted-breeds", RestrictedBreedViewSet, basename="admin-restricted-breeds")
+router.register("admin/home-hero-slides", AdminHomeHeroSlideViewSet, basename="admin-home-hero-slides")
 
 urlpatterns = [
     path("", include(router.urls)),
     path("auth/line", LineLoginView.as_view(), name="line-login"),
     path("auth/me", MeView.as_view(), name="auth-me"),
     path("auth/refresh", TokenRefreshView.as_view(), name="auth-refresh"),
+    path("content/home-hero-slides", HomeHeroSlideView.as_view(), name="content-home-hero-slides"),
     path("reservations/availability", ReservationAvailabilityView.as_view(), name="reservation-availability"),
     path("payments/checkout-session", CreateCheckoutSessionView.as_view(), name="payments-checkout"),
     path("payments/history", PaymentHistoryView.as_view(), name="payments-history"),

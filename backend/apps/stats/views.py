@@ -3,7 +3,7 @@
 from django.db.models import Count, Sum
 from django.db.models.functions import Coalesce
 from django.utils import timezone
-from rest_framework import permissions
+from rest_framework import permissions, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -13,7 +13,8 @@ from apps.dogs.models import Dog
 from apps.payments.models import PaymentRecord
 from apps.reservations.models import FacilityRule, Reservation, ReservationDog
 from apps.reservations.services import reconcile_reservation_statuses
-from apps.stats.models import BreedDailyStats
+from apps.stats.models import BreedDailyStats, HomeHeroSlide
+from apps.stats.serializers import HomeHeroSlideSerializer
 
 
 def _active_reservation_dogs(now: datetime):
@@ -190,3 +191,18 @@ class AdminDashboardView(APIView):
                 "sales_today": sales_today,
             }
         )
+
+
+class HomeHeroSlideView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        slides = HomeHeroSlide.objects.filter(is_active=True).order_by("display_order", "id")
+        serializer = HomeHeroSlideSerializer(slides, many=True, context={"request": request})
+        return Response(serializer.data)
+
+
+class AdminHomeHeroSlideViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAdminUser]
+    serializer_class = HomeHeroSlideSerializer
+    queryset = HomeHeroSlide.objects.all().order_by("display_order", "id")
