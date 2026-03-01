@@ -152,3 +152,39 @@ export type PaymentHistoryItem = {
   idempotency_key?: string;
   created_at: string;
 };
+
+export type CheckinQrPreview = {
+  reservation_id: number;
+  status: string;
+  payment_status: string;
+  user: {
+    id: number;
+    display_name: string;
+    suspended_until: string | null;
+  };
+  slot: {
+    date: string;
+    start_time: string;
+    end_time: string;
+  };
+  dogs: Array<{
+    dog_id: number;
+    dog_name: string;
+    breed: string;
+    size_category: string;
+    weight_kg: string;
+  }>;
+  eligibility: {
+    allowed: boolean;
+    reason_code: string;
+    reason: string;
+  };
+  checkin_window: {
+    open_at: string;
+    close_at: string;
+    slot_start: string;
+    slot_end: string;
+    qr_expires_at: string | null;
+    checked_at: string;
+  };
+};

@@ -8,41 +8,79 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.accounts.models import User
-from apps.checkins.models import CheckinLog
+from apps.checkins.models import CheckinLog, Entry
 from apps.dogs.models import Dog
 from apps.payments.models import PaymentRecord
-from apps.reservations.models import FacilityRule, Reservation, ReservationDog
+from apps.reservations.models import FacilityRule, Reservation
 from apps.reservations.services import reconcile_reservation_statuses
 from apps.stats.models import BreedDailyStats, HomeHeroSlide
 from apps.stats.serializers import HomeHeroSlideSerializer
 
 
-def _active_reservation_dogs(now: datetime):
-    active_reservations = Reservation.objects.filter(
-        date=now.date(),
-        status=Reservation.Status.CHECKED_IN,
-        start_time__lte=now.time(),
-        end_time__gte=now.time(),
+def _active_entries(now: datetime):
+    return Entry.objects.filter(
+        status=Entry.Status.IN,
+        checked_out_at__isnull=True,
+        checked_in_at__lte=now,
     )
-    return ReservationDog.objects.filter(reservation__in=active_reservations)
+
+
+def _build_realtime_breed_rows(now: datetime):
+    active_entries = _active_entries(now)
+    return list(
+        active_entries.values("breed_snapshot")
+        .annotate(count=Count("id"))
+        .order_by("-count", "breed_snapshot")
+    )
+
+
+def _build_daily_breed_rows(target_date: date):
+    return list(
+        BreedDailyStats.objects.filter(date=target_date)
+        .values("breed")
+        .annotate(count=Coalesce(Sum("total_checkins"), 0), unique_dogs=Coalesce(Sum("unique_dogs"), 0))
+        .order_by("-count", "breed")
+    )
+
+
+def _build_monthly_breed_rows(month_start: date, month_end: date):
+    return list(
+        BreedDailyStats.objects.filter(date__gte=month_start, date__lt=month_end)
+        .values("breed")
+        .annotate(count=Coalesce(Sum("total_checkins"), 0), unique_dogs=Coalesce(Sum("unique_dogs"), 0))
+        .order_by("-count", "breed")
+    )
 
 
 class CurrentStatsView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_scope = "public_stats"
 
     def get(self, request, *args, **kwargs):
         reconcile_reservation_statuses()
 
         now = timezone.localtime()
-        active_links = _active_reservation_dogs(now)
-        current_dogs = active_links.count()
-        breed_counts = list(active_links.values("breed").annotate(count=Count("id")).order_by("-count", "breed"))
+        active_entries = _active_entries(now)
+        current_dogs = active_entries.count()
+
+        breed_counts = [
+            {
+                "breed": row["breed_snapshot"],
+                "count": row["count"],
+            }
+            for row in _build_realtime_breed_rows(now)
+        ]
+
         dogs = list(
-            active_links.values("dog_name", "breed", "size_category").order_by("dog_name", "id")
+            active_entries.values(
+                "dog_name_snapshot",
+                "breed_snapshot",
+                "size_category_snapshot",
+            ).order_by("dog_name_snapshot", "id")
         )
 
-        size_rows = active_links.values("size_category").annotate(count=Count("id"))
-        size_counts = {row["size_category"]: row["count"] for row in size_rows}
+        size_rows = active_entries.values("size_category_snapshot").annotate(count=Count("id"))
+        size_counts = {row["size_category_snapshot"]: row["count"] for row in size_rows}
 
         rule = FacilityRule.get_current()
         max_capacity = rule.max_total_dogs_per_slot
@@ -70,13 +108,21 @@ class CurrentStatsView(APIView):
                 "congestion": congestion,
                 "breed_counts": breed_counts,
                 "breeds": breed_counts,
-                "dogs": dogs,
+                "dogs": [
+                    {
+                        "dog_name": row["dog_name_snapshot"],
+                        "breed": row["breed_snapshot"],
+                        "size_category": row["size_category_snapshot"],
+                    }
+                    for row in dogs
+                ],
             }
         )
 
 
 class BreedStatsView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_scope = "public_stats"
 
     def get(self, request, *args, **kwargs):
         reconcile_reservation_statuses()
@@ -86,7 +132,8 @@ class BreedStatsView(APIView):
 
         try:
             if period == "realtime":
-                data = list(_active_reservation_dogs(now).values("breed").annotate(count=Count("id")).order_by("-count", "breed"))
+                rows = _build_realtime_breed_rows(now)
+                data = [{"breed": row["breed_snapshot"], "count": row["count"]} for row in rows]
                 return Response(
                     {
                         "period": "realtime",
@@ -98,12 +145,7 @@ class BreedStatsView(APIView):
 
             if period == "daily":
                 target_date = self._parse_daily_target_date(request.query_params.get("date"), default=now.date())
-                rows = list(
-                    BreedDailyStats.objects.filter(date=target_date)
-                    .values("breed")
-                    .annotate(count=Coalesce(Sum("total_checkins"), 0), unique_dogs=Coalesce(Sum("unique_dogs"), 0))
-                    .order_by("-count", "breed")
-                )
+                rows = _build_daily_breed_rows(target_date)
                 return Response(
                     {
                         "period": "daily",
@@ -115,12 +157,7 @@ class BreedStatsView(APIView):
 
             if period == "monthly":
                 month_start, month_end = self._parse_month_range(request.query_params.get("month"), default=now.date())
-                rows = list(
-                    BreedDailyStats.objects.filter(date__gte=month_start, date__lt=month_end)
-                    .values("breed")
-                    .annotate(count=Coalesce(Sum("total_checkins"), 0), unique_dogs=Coalesce(Sum("unique_dogs"), 0))
-                    .order_by("-count", "breed")
-                )
+                rows = _build_monthly_breed_rows(month_start, month_end)
                 return Response(
                     {
                         "period": "monthly",
@@ -157,6 +194,62 @@ class BreedStatsView(APIView):
         return month_start, month_end
 
 
+class BreedRealtimeStatsView(APIView):
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = "public_stats"
+
+    def get(self, request, *args, **kwargs):
+        reconcile_reservation_statuses()
+        now = timezone.localtime()
+        rows = _build_realtime_breed_rows(now)
+        return Response(
+            {
+                "period": "realtime",
+                "target_date": now.date(),
+                "data": [{"breed": row["breed_snapshot"], "count": row["count"]} for row in rows],
+                "generated_at": now,
+            }
+        )
+
+
+class BreedDailyStatsView(APIView):
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = "public_stats"
+
+    def get(self, request, *args, **kwargs):
+        reconcile_reservation_statuses()
+        now = timezone.localtime()
+        target_date = BreedStatsView._parse_daily_target_date(request.query_params.get("date"), default=now.date())
+        rows = _build_daily_breed_rows(target_date)
+        return Response(
+            {
+                "period": "daily",
+                "target_date": target_date,
+                "data": rows,
+                "generated_at": now,
+            }
+        )
+
+
+class BreedMonthlyStatsView(APIView):
+    permission_classes = [permissions.AllowAny]
+    throttle_scope = "public_stats"
+
+    def get(self, request, *args, **kwargs):
+        reconcile_reservation_statuses()
+        now = timezone.localtime()
+        month_start, month_end = BreedStatsView._parse_month_range(request.query_params.get("month"), default=now.date())
+        rows = _build_monthly_breed_rows(month_start, month_end)
+        return Response(
+            {
+                "period": "monthly",
+                "target_month": month_start.strftime("%Y-%m"),
+                "data": rows,
+                "generated_at": now,
+            }
+        )
+
+
 class AdminDashboardView(APIView):
     permission_classes = [permissions.IsAdminUser]
 
@@ -176,9 +269,10 @@ class AdminDashboardView(APIView):
                 "dogs": Dog.objects.count(),
                 "today_reservations": Reservation.objects.filter(date=today).count(),
                 "today_checkins": CheckinLog.objects.filter(action=CheckinLog.Action.CHECK_IN, scanned_at__date=today).count(),
-                "active_checkins": Reservation.objects.filter(
-                    date=today,
-                    status=Reservation.Status.CHECKED_IN,
+                "active_checkins": Entry.objects.filter(
+                    status=Entry.Status.IN,
+                    checked_out_at__isnull=True,
+                    checked_in_at__date=today,
                 ).count(),
                 "pending_payment": Reservation.objects.filter(
                     date=today,
@@ -195,6 +289,7 @@ class AdminDashboardView(APIView):
 
 class HomeHeroSlideView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_scope = "public_content"
 
     def get(self, request, *args, **kwargs):
         slides = HomeHeroSlide.objects.filter(is_active=True).order_by("display_order", "id")

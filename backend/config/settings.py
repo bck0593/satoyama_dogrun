@@ -3,14 +3,24 @@ from datetime import timedelta
 from pathlib import Path
 
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
+from django.core.management.utils import get_random_secret_key
 from dotenv import load_dotenv
 
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv("SECRET_KEY", "insecure-local-secret")
-DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+
+def env_bool(name: str, default: bool) -> bool:
+    return os.getenv(name, str(default)).strip().lower() in {"1", "true", "yes", "on"}
+
+
+DEPLOY_ENV = os.getenv("DEPLOY_ENV", "development").strip().lower()
+SECRET_KEY_ENV = os.getenv("SECRET_KEY", "").strip()
+SECRET_KEY = SECRET_KEY_ENV or get_random_secret_key()
+DEBUG = env_bool("DEBUG", DEPLOY_ENV not in {"production", "prod"})
+IS_PRODUCTION = DEPLOY_ENV in {"production", "prod"} or not DEBUG
 
 ALLOWED_HOSTS = [host.strip() for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if host.strip()]
 
@@ -102,6 +112,20 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
     ),
+    "DEFAULT_THROTTLE_CLASSES": (
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+        "rest_framework.throttling.ScopedRateThrottle",
+    ),
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": os.getenv("THROTTLE_ANON", "60/min"),
+        "user": os.getenv("THROTTLE_USER", "240/min"),
+        "auth_line": os.getenv("THROTTLE_AUTH_LINE", "20/min"),
+        "stripe_webhook": os.getenv("THROTTLE_STRIPE_WEBHOOK", "60/min"),
+        "public_availability": os.getenv("THROTTLE_PUBLIC_AVAILABILITY", "60/min"),
+        "public_stats": os.getenv("THROTTLE_PUBLIC_STATS", "120/min"),
+        "public_content": os.getenv("THROTTLE_PUBLIC_CONTENT", "60/min"),
+    },
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
 }
@@ -133,9 +157,9 @@ SECURE_HSTS_PRELOAD = not DEBUG
 
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
-STRIPE_MOCK = os.getenv("STRIPE_MOCK", str(DEBUG)).lower() == "true"
+STRIPE_MOCK = env_bool("STRIPE_MOCK", DEBUG)
 LINE_CHANNEL_ID = os.getenv("LINE_CHANNEL_ID", "")
-LINE_LOGIN_MOCK = os.getenv("LINE_LOGIN_MOCK", "True").lower() == "true"
+LINE_LOGIN_MOCK = env_bool("LINE_LOGIN_MOCK", not IS_PRODUCTION)
 
 AZURE_ACCOUNT_NAME = os.getenv("AZURE_ACCOUNT_NAME", "")
 AZURE_ACCOUNT_KEY = os.getenv("AZURE_ACCOUNT_KEY", "")
@@ -173,3 +197,26 @@ if appinsights_connection:
         "formatter": "standard",
     }
     LOGGING["root"]["handlers"].append("azure")
+
+
+if IS_PRODUCTION:
+    if not SECRET_KEY_ENV:
+        raise ImproperlyConfigured("SECRET_KEY must be explicitly set via environment in production.")
+
+    if DEBUG:
+        raise ImproperlyConfigured("DEBUG must be False in production.")
+
+    if LINE_LOGIN_MOCK:
+        raise ImproperlyConfigured("LINE_LOGIN_MOCK must be False in production.")
+
+    if not ALLOWED_HOSTS or set(ALLOWED_HOSTS).issubset({"localhost", "127.0.0.1"}):
+        raise ImproperlyConfigured("ALLOWED_HOSTS must be set to production domains in production.")
+
+    if any("localhost" in origin or "127.0.0.1" in origin for origin in CORS_ALLOWED_ORIGINS):
+        raise ImproperlyConfigured("CORS_ALLOWED_ORIGINS must not contain localhost in production.")
+
+    if any("localhost" in origin or "127.0.0.1" in origin for origin in CSRF_TRUSTED_ORIGINS):
+        raise ImproperlyConfigured("CSRF_TRUSTED_ORIGINS must not contain localhost in production.")
+
+    if not STRIPE_MOCK and not STRIPE_WEBHOOK_SECRET:
+        raise ImproperlyConfigured("STRIPE_WEBHOOK_SECRET must be set in production when STRIPE_MOCK is False.")

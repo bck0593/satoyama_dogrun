@@ -92,6 +92,7 @@ class AdminReservationViewSet(viewsets.ReadOnlyModelViewSet):
 
 class ReservationAvailabilityView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_scope = "public_availability"
 
     def get(self, request, *args, **kwargs):
         reconcile_reservation_statuses()

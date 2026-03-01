@@ -1,4 +1,4 @@
-from collections import defaultdict
+﻿from collections import defaultdict
 from datetime import date, timedelta
 
 from django.core.management.base import BaseCommand, CommandError
@@ -6,42 +6,29 @@ from django.db import transaction
 from django.db.models import Count
 from django.utils import timezone
 
-from apps.checkins.models import CheckinLog
-from apps.reservations.models import ReservationDog
+from apps.checkins.models import Entry
 from apps.stats.models import BreedDailyStats
 
 
 def rebuild_for_date(target_date: date) -> int:
-    reservation_ids = list(
-        CheckinLog.objects.filter(
-            action=CheckinLog.Action.CHECK_IN,
-            scanned_at__date=target_date,
-        )
-        .values_list("reservation_id", flat=True)
-        .distinct()
-    )
+    entries = Entry.objects.filter(checked_in_at__date=target_date).exclude(status=Entry.Status.INVALID)
 
     breed_rows = list(
-        ReservationDog.objects.filter(reservation_id__in=reservation_ids)
-        .values("breed")
+        entries.values("breed_snapshot")
         .annotate(total_checkins=Count("id"), unique_dogs=Count("dog_id", distinct=True))
         .order_by()
     )
 
-    checkout_duration_map = dict(
-        CheckinLog.objects.filter(
-            action=CheckinLog.Action.CHECK_OUT,
-            reservation_id__in=reservation_ids,
-            duration_minutes__isnull=False,
-        ).values_list("reservation_id", "duration_minutes")
-    )
-
     duration_by_breed: dict[str, int] = defaultdict(int)
-    if checkout_duration_map:
-        for row in ReservationDog.objects.filter(reservation_id__in=checkout_duration_map.keys()).values("reservation_id", "breed"):
-            duration = checkout_duration_map.get(row["reservation_id"])
-            if duration:
-                duration_by_breed[row["breed"]] += int(duration)
+    duration_rows = entries.filter(checked_out_at__isnull=False).values(
+        "breed_snapshot",
+        "checked_in_at",
+        "checked_out_at",
+    )
+    for row in duration_rows:
+        elapsed = row["checked_out_at"] - row["checked_in_at"]
+        minutes = max(int(elapsed.total_seconds() // 60), 0)
+        duration_by_breed[row["breed_snapshot"]] += minutes
 
     with transaction.atomic():
         BreedDailyStats.objects.filter(date=target_date).delete()
@@ -49,10 +36,10 @@ def rebuild_for_date(target_date: date) -> int:
             [
                 BreedDailyStats(
                     date=target_date,
-                    breed=row["breed"],
+                    breed=row["breed_snapshot"],
                     total_checkins=row["total_checkins"],
                     unique_dogs=row["unique_dogs"],
-                    total_duration_minutes=duration_by_breed.get(row["breed"], 0),
+                    total_duration_minutes=duration_by_breed.get(row["breed_snapshot"], 0),
                 )
                 for row in breed_rows
             ]
@@ -62,7 +49,7 @@ def rebuild_for_date(target_date: date) -> int:
 
 
 class Command(BaseCommand):
-    help = "Rebuild BreedDailyStats from check-in/checkout logs."
+    help = "Rebuild BreedDailyStats from Entry records."
 
     def add_arguments(self, parser):
         parser.add_argument("--date", type=str, default=None, help="Target date (YYYY-MM-DD). Defaults to today.")

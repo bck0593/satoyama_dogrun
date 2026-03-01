@@ -59,7 +59,7 @@ def auto_checkout_checked_in_reservations(rule: FacilityRule, now=None) -> int:
             checkout_count += 1
 
     if checked_out_rows:
-        from apps.checkins.models import CheckinLog
+        from apps.checkins.models import CheckinLog, Entry
 
         CheckinLog.objects.bulk_create(
             [
@@ -73,6 +73,18 @@ def auto_checkout_checked_in_reservations(rule: FacilityRule, now=None) -> int:
                 )
                 for row in checked_out_rows
             ]
+        )
+
+        reservation_ids = [row["reservation_id"] for row in checked_out_rows]
+        entry_checkout_at = current
+        Entry.objects.filter(
+            reservation_id__in=reservation_ids,
+            status=Entry.Status.IN,
+            checked_out_at__isnull=True,
+        ).update(
+            status=Entry.Status.OUT,
+            checked_out_at=entry_checkout_at,
+            updated_at=entry_checkout_at,
         )
 
     return checkout_count

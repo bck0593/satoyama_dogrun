@@ -3,6 +3,7 @@ import { tokenStorage } from "@/src/lib/auth";
 import type {
   BreedStatsPeriod,
   BreedStatsResponse,
+  CheckinQrPreview,
   CurrentStats,
   Dog,
   HomeHeroSlide,
@@ -310,6 +311,10 @@ export const apiClient = {
     });
   },
 
+  async getCheckinQrPreview(qr_token: string) {
+    return apiRequest<CheckinQrPreview>(`/checkins/qr/${qr_token}/preview`);
+  },
+
   async getCurrentStats() {
     return apiRequest<CurrentStats>("/stats/current", { auth: false });
   },
@@ -319,6 +324,24 @@ export const apiClient = {
     if (options?.date) params.set("date", options.date);
     if (options?.month) params.set("month", options.month);
     return apiRequest<BreedStatsResponse>(`/stats/breeds?${params.toString()}`, { auth: false });
+  },
+
+  async getBreedStatsRealtime() {
+    return apiRequest<BreedStatsResponse>("/stats/breeds/realtime", { auth: false });
+  },
+
+  async getBreedStatsDaily(date?: string) {
+    const params = new URLSearchParams();
+    if (date) params.set("date", date);
+    const query = params.toString();
+    return apiRequest<BreedStatsResponse>(`/stats/breeds/daily${query ? `?${query}` : ""}`, { auth: false });
+  },
+
+  async getBreedStatsMonthly(month?: string) {
+    const params = new URLSearchParams();
+    if (month) params.set("month", month);
+    const query = params.toString();
+    return apiRequest<BreedStatsResponse>(`/stats/breeds/monthly${query ? `?${query}` : ""}`, { auth: false });
   },
 
   async getHomeHeroSlides() {

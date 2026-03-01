@@ -154,6 +154,7 @@ class CreateCheckoutSessionView(APIView):
 class StripeWebhookView(APIView):
     permission_classes = [permissions.AllowAny]
     authentication_classes = []
+    throttle_scope = "stripe_webhook"
 
     def post(self, request, *args, **kwargs):
         payload = request.body
@@ -162,8 +163,13 @@ class StripeWebhookView(APIView):
         try:
             if settings.STRIPE_WEBHOOK_SECRET:
                 event = stripe.Webhook.construct_event(payload=payload, sig_header=sig_header, secret=settings.STRIPE_WEBHOOK_SECRET)
-            else:
+            elif settings.STRIPE_MOCK:
                 event = json.loads(payload.decode("utf-8"))
+            else:
+                return Response(
+                    {"detail": "Stripe webhook secret is not configured."},
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                )
         except Exception:
             return Response({"detail": "invalid webhook"}, status=status.HTTP_400_BAD_REQUEST)
 

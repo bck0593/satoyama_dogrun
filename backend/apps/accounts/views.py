@@ -12,6 +12,7 @@ User = get_user_model()
 
 class LineLoginView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_scope = "auth_line"
 
     def post(self, request, *args, **kwargs):
         serializer = LineLoginSerializer(data=request.data, context={"request": request})

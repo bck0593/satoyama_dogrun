@@ -1,335 +1,128 @@
-# FC今治 里山ドッグラン システムアーキテクチャ
+﻿# FC今治 里山ドッグラン アーキテクチャ
+最終更新: 2026-03-01
 
-最終更新: 2026-02-28  
-対象: MVP（本番運用品質）
+## 1. プロダクトの目的
+FC今治 里山ドッグランを、予約システムではなく「犬と人の共助コミュニティOS」として運用する。中核データは「誰のどの犬が、いつ入っていつ出たか」であり、犬種可視化はその一次データから一貫して生成する。
 
-## 0. 仕様ソースと前提
-
-- 本ドキュメントは以下を統合した最新版設計書です。
-  - 合意済み要件（会員管理 / 犬登録 / 予約 / 決済 / QRチェックイン / 利用状況可視化 / 管理画面）
-  - 現行実装（`backend` / `frontend`）
-  - 既存設計メモ（旧 `architecture.md`）
-- コメント:
-  - リポジトリ直下の `dogrun.md` 実ファイルは現時点で確認できないため、要件は合意済み仕様と現実装を基準化。
-
-## 1. 目的と非機能目標
-
-- 目的:
-  - ドッグラン運営の受付・予約・決済・当日導線を一本化し、現場オペレーションを簡素化する。
-- 非機能目標:
-  - MVPで実運用可能
-  - API/Frontend 分離
-  - 将来のマイクロサービス分割可能な構造
-  - Azure 本番配備前提
-
-## 2. システム構成
-
-```text
-[Next.js Frontend] --HTTPS/JSON--> [Django REST API]
-        |                                  |
-        | JWT (Bearer)                     | ORM
-        v                                  v
-  Browser Storage                      PostgreSQL
-        |
-        +-- Stripe Checkout ---------> Stripe
-        |
-        +-- LINE Login (id_token) ---> LINE Verify API
-
-Media: Azure Blob Storage
-Logs/Monitoring: Application Insights
-Deploy: Azure App Service (frontend / backend)
-```
-
-## 3. リポジトリ構成（現行）
-
-```text
-FCimabari_Dogrun/
-├─ backend/
-│  ├─ config/
-│  │  ├─ settings.py
-│  │  ├─ urls.py
-│  │  └─ api_urls.py
-│  ├─ apps/
-│  │  ├─ accounts/
-│  │  ├─ dogs/
-│  │  ├─ reservations/
-│  │  ├─ payments/
-│  │  ├─ checkins/
-│  │  ├─ stats/
-│  │  └─ common/
-│  ├─ tests/
-│  ├─ scripts/
-│  ├─ requirements.txt
-│  └─ Dockerfile
-├─ frontend/
-│  ├─ app/
-│  │  ├─ page.tsx
-│  │  ├─ login/page.tsx
-│  │  ├─ mypage/page.tsx
-│  │  ├─ dog-registration/page.tsx
-│  │  ├─ reservation/page.tsx
-│  │  ├─ checkin/page.tsx
-│  │  ├─ live-status/page.tsx
-│  │  └─ admin/page.tsx
-│  ├─ src/
-│  │  ├─ components/
-│  │  ├─ contexts/
-│  │  ├─ hooks/
-│  │  └─ lib/
-│  ├─ app_legacy/      # UI参照元
-│  └─ Dockerfile
-├─ docker-compose.yml
-└─ docs/
-   ├─ architecture.md
-   └─ azure-deploy.md
-```
-
-## 4. バックエンド設計
-
-### 4.1 レイヤ
-
-- API: DRF View/ViewSet
-- Domain: `models.py` + `serializers.py` + `services.py`
-- Infra: Django ORM, Storage backend, Stripe SDK, requests(LINE verify)
-
-### 4.2 ドメインモデル（主要）
-
-#### accounts
-
-- `User`
-  - `line_user_id` (unique)
-  - `display_name`, `email`, `phone_number`
-  - `no_show_count`, `suspended_until`
-  - `is_suspended` プロパティで利用停止判定
-
-#### dogs
-
+## 2. コア概念
+- `Identity(Member)`
+  - LINEで一意 (`line_user_id`)
+  - 利用停止 (`suspended_until`)
+  - 連絡先 (`display_name`, `email`, `phone_number`)
 - `Dog`
-  - `owner`, `name`, `breed`, `weight_kg`, `size_category`
-  - `birth_date`, `vaccine_expires_on`, `vaccine_proof_image`
-  - `is_restricted_breed`, `is_active`, `notes`
-- `RestrictedBreed`
-  - 危険犬種マスタ
+  - 犬種、サイズ、ワクチン期限/承認状態
+  - 入場可能性の判定基準を保持
+- `Entry`
+  - 1回の利用実体
+  - `checked_in_at` / `checked_out_at`
+  - 犬情報スナップショットを保持
 
-#### reservations
+`Reservation` は `Entry` を円滑に生成するための補助線として扱う。
 
-- `FacilityRule`（運用ルールのDB管理）
-  - `open_time`, `close_time`, `slot_minutes`
-  - `max_total_dogs_per_slot`, `max_large_dogs_per_slot`
-  - `max_dogs_per_owner`
-  - `allow_restricted_breeds`
-  - `checkin_open_minutes_before`, `checkin_close_minutes_after_start`
-  - `cancellation_refund_hours`
-  - `max_no_show_before_suspension`, `suspension_days`
-  - `base_fee_per_dog`
-- `Reservation`
-  - `date`, `start_time`, `end_time`, `party_size`
-  - `status`:
-    - `pending_payment`, `confirmed`, `checked_in`, `completed`, `cancelled`, `no_show`
-  - `payment_status`:
-    - `unpaid`, `paid`, `refunded`, `failed`
-  - `qr_token`
-- `ReservationDog`
-  - 予約時点の犬スナップショット保持
-- `NoShowRecord`
-  - no-show発生記録
+## 3. ドメイン依存ルール
+- `accounts`: 他appへ依存しない
+- `dogs`: `accounts` のみ参照
+- `reservations`: `accounts`, `dogs` を参照
+- `checkins`: `accounts`, `dogs`, `reservations` を参照
+- `payments`: `reservations` に依存するが、状態侵食は最小
+- `stats`: 他appの業務テーブルを直接参照しない
+  - 原則は集計テーブル/集計ビューを参照
+  - 例外として realtime は `Entry` 一次データを参照
 
-#### checkins
+## 4. 状態遷移
+### Reservation
+- `pending_payment -> confirmed -> checked_in -> completed`
+- 分岐: `cancelled`, `no_show`, `expired`
 
-- `CheckinLog`
-  - `action`: `check_in` / `check_out`
-  - `source`: `qr` / `admin` など
-  - `metadata` で監査情報保持
+### Payment
+- `created -> paid`
+- 分岐: `failed`, `refunded`
 
-#### payments
+### Entry
+- `in -> out`
+- 例外: `invalid`
 
-- `PaymentRecord`
-  - `checkout_session_id`, `payment_intent_id`
-  - `amount`, `currency`, `status`, `refunded_amount`
-  - `payload` (Webhook payload)
+## 5. 業務フロー
+1. LINEログイン
+2. 犬登録（ワクチン証明アップロード）
+3. スタッフ承認（`vaccine_approval_status`）
+4. 予約作成
+5. 決済
+6. QRプレビュー（事前判定）
+7. QRチェックイン（Entry生成）
+8. チェックアウト（Entry確定）
+9. 統計生成（realtime + 日次）
 
-### 4.3 API一覧（`/api/v1`）
+## 6. データモデル方針
+- `Entry` を入退場の一次ソースとする
+  - `reservation_id` nullable (将来の当日受付対応)
+  - 犬スナップショット (`dog_name_snapshot`, `breed_snapshot`, `size_category_snapshot`, `weight_kg_snapshot`)
+- `CheckinLog` は監査イベントログとして保持
+- 集計は `BreedDailyStats(date, breed, total_checkins, unique_dogs, total_duration_minutes)` を使用
+- 一意制約
+  - `BreedDailyStats`: `(date, breed)` unique
 
-#### Auth
+## 7. API（フロー起点）
+### Checkin
+- `GET /api/v1/checkins/qr/{token}/preview`
+  - 予約内容、犬情報、時間窓、可否理由を返す
+- `POST /api/v1/checkins/qr`
+  - チェックイン実行（重複は 409）
+- `POST /api/v1/checkins/checkout`
+  - スタッフチェックアウト
 
-- `POST /auth/line`
-- `GET /auth/me`
-- `PATCH /auth/me`
+### Stats
+- `GET /api/v1/stats/current`
+- `GET /api/v1/stats/breeds/realtime`
+- `GET /api/v1/stats/breeds/daily?date=YYYY-MM-DD`
+- `GET /api/v1/stats/breeds/monthly?month=YYYY-MM`
+- 互換API: `GET /api/v1/stats/breeds?period=...`
 
-#### Dogs
+## 8. 集計設計
+- realtime
+  - ソース: `Entry(status=in, checked_out_at is null)`
+  - 用途: 現在の犬種構成、混雑表示
+- daily/monthly
+  - ソース: `BreedDailyStats`
+  - 生成: 管理コマンド `rebuild_breed_daily_stats`
 
-- `GET /dogs/`
-- `POST /dogs/`
-- `GET /dogs/{id}/`
-- `PATCH /dogs/{id}/`
-- `DELETE /dogs/{id}/`
+## 9. 運用設計（例外・監査・再実行）
+- Stripe webhook
+  - 冪等化を前提（`event_id` 永続化を次フェーズで追加）
+- QR重複
+  - 同一予約の再チェックインは `409 Conflict`
+- 自動チェックアウト
+  - 営業時間 + grace経過でバッチ確定
+  - `Entry` と `CheckinLog` を同期更新
+- 監査
+  - `CheckinLog.metadata` / `PaymentRecord.payload` を保持
+  - 管理操作は actor を `metadata` に残す
 
-#### Reservations
+## 10. 実装順（バイブコーディング）
+1. BreedMaster + 犬種入力揺れ対策
+2. Entry中心化（checkin/outでEntry生成）
+3. realtime統計をEntry基準に統一
+4. 日次集計バッチの固定化
+5. `/stats/breeds/*` API群
+6. 可視化UIの拡張
 
-- `GET /reservations/`
-- `POST /reservations/`
-- `GET /reservations/{id}/`
-- `PATCH /reservations/{id}/`
-- `DELETE /reservations/{id}/`
-- `POST /reservations/{id}/cancel/`
-- `POST /reservations/{id}/mark_no_show/` (admin)
-- `GET /reservations/availability?date=YYYY-MM-DD`
+## 11. 現在の到達点（2026-03-01）
+- Entryモデル導入済み
+- QR preview API導入済み
+- realtime統計をEntry一次ソース化済み
+- `/stats/breeds/realtime|daily|monthly` 導入済み
 
-#### Payments
+## 12. 次フェーズ
+- `BreedMaster` 導入 (`Dog.breed_master` + `breed_raw`)
+- Stripe webhook `event_id` 完全冪等化
+- stats app を集計テーブル参照へさらに分離
 
-- `POST /payments/checkout-session`
-- `POST /payments/stripe/webhook`
-- `GET /payments/history`
-
-#### Checkin
-
-- `POST /checkins/qr`
-- `POST /checkins/checkout` (admin)
-
-#### Stats
-
-- `GET /stats/current`
-
-#### Admin
-
-- `GET /admin/dashboard`
-- `GET /admin/sales`
-- `GET /admin/members/`
-- `GET /admin/dogs/`
-- `GET /admin/reservations/`
-- `GET /admin/checkins/`
-- `GET/POST/PATCH/DELETE /admin/restricted-breeds/`
-
-## 5. フロントエンド設計
-
-### 5.1 ページ（ユーザー側 必須）
-
-- Top: `/`
-- LINE Login: `/login`
-- MyPage: `/mypage`
-- Dog Registration: `/dog-registration`
-- Reservation: `/reservation`
-- QR Checkin: `/checkin`
-- Live Status: `/live-status`
-
-### 5.2 実装方針
-
-- UIは `app_legacy` を参照しつつ、ロジックは再設計
-- 状態管理:
-  - `AuthProvider` + ページ単位 hooks
-- APIアクセス:
-  - `src/lib/api.ts` に集約
-- 近年のリファクタリング反映:
-  - 日付系ユーティリティ共通化
-  - 予約表示ロジック共通化
-  - 犬情報取得/ライブ状態取得の hooks 化
-
-## 6. 主要業務ルール（ドッグラン特有）
-
-- ワクチン期限チェック:
-  - 犬登録時に期限検証
-  - 予約時に「予約日で有効か」を再検証
-- 犬サイズ制御:
-  - 大型犬上限をスロット単位で制御
-- 最大頭数制御:
-  - スロット全体頭数上限を厳密チェック
-- 危険犬種管理:
-  - `RestrictedBreed` + `allow_restricted_breeds` ルール
-- no-show対応:
-  - no-show記録 + ユーザー停止期間付与
-
-## 7. 重要フロー
-
-### 7.1 LINEログイン
-
-1. Frontend が LINE OAuth で `id_token` 取得（本番）
-2. Backend `POST /auth/line`
-3. LINE verify API で検証
-4. JWT発行
-
-開発モード:
-
-- `LINE_LOGIN_MOCK=True` で `line_user_id` 指定ログイン
-
-### 7.2 予約〜決済
-
-1. 空き状況取得 `GET /reservations/availability`
-2. 予約作成 `POST /reservations/`
-3. Stripe Checkout セッション作成
-4. Webhook で支払い結果反映
-5. `Reservation.status/payment_status` を更新
-
-### 7.3 QRチェックイン
-
-1. 利用者が QR 読み取り
-2. `POST /checkins/qr`
-3. 権限・時刻・予約状態を検証
-4. `checked_in` に遷移し `CheckinLog` 保存
-
-### 7.4 リアルタイム利用数
-
-- Backend:
-  - `GET /stats/current`
-  - `checked_in` かつ時間範囲内の予約を集計
-- Frontend:
-  - Polling（15秒〜30秒）で更新
-
-## 8. セキュリティ設計
-
-- 認証: JWT（SimpleJWT）
-- 通信: HTTPS前提 (`SECURE_PROXY_SSL_HEADER`)
-- Cookie: `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`
-- HSTS: 本番有効
-- 入力検証:
-  - DRF Serializer validation
-  - 犬画像: 5MB以下 / jpg,jpeg,png,webp
-- Webhook:
-  - `STRIPE_WEBHOOK_SECRET` が設定されている場合は署名検証を強制
-
-## 9. 運用設計
-
-- ログ:
-  - Console logging
-  - `APPINSIGHTS_CONNECTION_STRING` があれば AzureLogHandler 送信
-- 監査:
-  - `CheckinLog`
-  - `PaymentRecord.payload`
-- 監視推奨:
-  - API 5xx率
-  - Stripe webhook 失敗率
-  - QR checkin 4xx増加
-
-## 10. Azure本番構成
-
-- App Service:
-  - `dogrun-api` (Django)
-  - `dogrun-frontend` (Next.js)
-- Azure Database for PostgreSQL
-- Azure Blob Storage
-- Application Insights
-- Key Vault（シークレット保管推奨）
-
-詳細手順は `docs/azure-deploy.md` を参照。
-
-## 11. 仕様との差分コメント（要対応）
-
-以下は仕様に対して未実装または命名差異がある項目です。
-
-1. API上は `mark_no_show` が `admin` ではなく `reservations/{id}/mark_no_show/` として公開（権限はadmin）
-2. `max_small_dogs` / `max_large_dogs` は実装では `max_small_dogs_per_slot` / `max_large_dogs_per_slot`
-3. 自動checkoutは定期バッチではなく、現状はAPIアクセス時の状態再計算で実行
-4. `rain_closure_enabled` は手動トグル運用（気象連携の自動判定は未実装）
-5. Stripe idempotencyはキー保存まで実装。重複イベント抑止ポリシーの厳密化は今後の運用課題
-
-## 12. 次期バージョン方針
-
-- ルールエンジン拡張:
-  - `max_small_dogs`, 雨天中止、祝日特別枠
-- チェックイン運用強化:
-  - 自動checkoutバッチ
-  - `qr_expires_at` 導入
-- 決済強化:
-  - idempotency key 保存
-  - 返金業務フローのAPI化
-- リアルタイム化:
-  - polling から WebSocket/SSE へ移行
+## 13. 本番セキュリティ基準
+- `DEPLOY_ENV=production` では fail-close で起動チェックする
+  - `SECRET_KEY` 未設定/既定値は禁止
+  - `DEBUG=True` 禁止
+  - `LINE_LOGIN_MOCK=True` 禁止
+  - `STRIPE_MOCK=False` なら `STRIPE_WEBHOOK_SECRET` 必須
+  - `ALLOWED_HOSTS` / `CORS_ALLOWED_ORIGINS` / `CSRF_TRUSTED_ORIGINS` の localhost 設定禁止
+- 公開系APIは DRF throttle を適用
+  - `auth_line`, `stripe_webhook`, `public_availability`, `public_stats`, `public_content`
