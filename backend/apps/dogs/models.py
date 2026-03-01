@@ -5,6 +5,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 
 from apps.common.validators import validate_image_extension, validate_image_size
+from apps.dogs.breed_normalizer import normalize_breed_name
 
 
 class RestrictedBreed(models.Model):
@@ -38,7 +39,8 @@ class Dog(models.Model):
 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="dogs")
     name = models.CharField(max_length=80)
-    breed = models.CharField(max_length=120)
+    breed_raw = models.CharField(max_length=120)
+    breed_normalized = models.CharField(max_length=120, db_index=True)
     breed_group = models.CharField(max_length=50, null=True, blank=True)
     weight_kg = models.DecimalField(max_digits=5, decimal_places=2, validators=[MinValueValidator(0.1)])
     size_category = models.CharField(max_length=10, choices=SizeCategory.choices)
@@ -75,7 +77,15 @@ class Dog(models.Model):
         ordering = ["name"]
 
     def __str__(self) -> str:
-        return f"{self.name} ({self.breed})"
+        return f"{self.name} ({self.breed_normalized})"
+
+    @property
+    def breed(self) -> str:
+        return self.breed_normalized
+
+    @breed.setter
+    def breed(self, value: str) -> None:
+        self.breed_raw = value
 
     @property
     def age_years(self) -> int | None:
@@ -91,11 +101,11 @@ class Dog(models.Model):
         return self.vaccine_expires_on >= target_date
 
     def save(self, *args, **kwargs):
-        self.breed = self.breed.strip()
+        self.breed_normalized = normalize_breed_name(self.breed_raw)
         if self.breed_group:
             self.breed_group = self.breed_group.strip()
         self.is_restricted_breed = RestrictedBreed.objects.filter(
-            breed_name__iexact=self.breed.strip(),
+            breed_name__iexact=self.breed_normalized,
             is_active=True,
         ).exists()
         super().save(*args, **kwargs)

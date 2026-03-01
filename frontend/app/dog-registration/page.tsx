@@ -9,6 +9,7 @@ import { PageHeader } from "@/src/components/page-header";
 import { useDogs } from "@/src/hooks/use-dogs";
 import { apiClient } from "@/src/lib/api";
 import { todayDateString } from "@/src/lib/date-utils";
+import { DOG_BREED_SUGGESTIONS } from "@/src/lib/dog-breed-suggestions";
 import {
   DOG_GENDER_OPTIONS,
   DOG_SIZE_OPTIONS,
@@ -88,10 +89,17 @@ export default function DogRegistrationPage() {
               <input
                 className="w-full rounded-xl border border-gray-300 px-3 py-2"
                 placeholder="犬種"
+                list="dog-breed-suggestions"
                 value={form.breed}
                 onChange={(event) => setForm((prev) => ({ ...prev, breed: event.target.value }))}
                 required
               />
+              <datalist id="dog-breed-suggestions">
+                {DOG_BREED_SUGGESTIONS.map((breed) => (
+                  <option key={breed} value={breed} />
+                ))}
+              </datalist>
+              <p className="text-xs text-gray-500">候補から選択できます。候補外の犬種は自由入力で登録できます。</p>
               <input
                 className="w-full rounded-xl border border-gray-300 px-3 py-2"
                 placeholder="犬種グループ (任意)"

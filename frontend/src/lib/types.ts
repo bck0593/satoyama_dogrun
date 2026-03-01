@@ -17,6 +17,8 @@ export type Dog = {
   owner: number;
   name: string;
   breed: string;
+  breed_raw: string;
+  breed_normalized: string;
   breed_group: string | null;
   weight_kg: string;
   size_category: "small" | "medium" | "large";

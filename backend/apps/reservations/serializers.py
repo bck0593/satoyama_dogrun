@@ -225,7 +225,7 @@ class ReservationCreateSerializer(serializers.Serializer):
                         reservation=reservation,
                         dog=dog,
                         dog_name=dog.name,
-                        breed=dog.breed,
+                        breed=dog.breed_normalized,
                         size_category=dog.size_category,
                         weight_kg=dog.weight_kg,
                     )

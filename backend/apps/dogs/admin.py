@@ -9,7 +9,8 @@ class DogAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "name",
-        "breed",
+        "breed_normalized",
+        "breed_raw",
         "size_category",
         "owner",
         "vaccine_expires_on",
@@ -20,7 +21,7 @@ class DogAdmin(admin.ModelAdmin):
         "is_active",
     )
     list_filter = ("size_category", "vaccine_approval_status", "is_restricted_breed", "is_active")
-    search_fields = ("name", "breed", "owner__display_name", "owner__username")
+    search_fields = ("name", "breed_normalized", "breed_raw", "owner__display_name", "owner__username")
     actions = ("approve_vaccine", "reject_vaccine")
 
     fieldsets = (
@@ -30,7 +31,8 @@ class DogAdmin(admin.ModelAdmin):
                 "fields": (
                     "owner",
                     "name",
-                    "breed",
+                    "breed_raw",
+                    "breed_normalized",
                     "breed_group",
                     "size_category",
                     "gender",
@@ -64,7 +66,7 @@ class DogAdmin(admin.ModelAdmin):
         ),
     )
 
-    readonly_fields = ("is_restricted_breed", "vaccine_reviewed_at")
+    readonly_fields = ("breed_normalized", "is_restricted_breed", "vaccine_reviewed_at")
 
     @admin.action(description="選択した犬のワクチン証明を承認")
     def approve_vaccine(self, request, queryset):

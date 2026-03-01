@@ -7,6 +7,7 @@ from apps.dogs.models import Dog, RestrictedBreed
 
 class DogSerializer(serializers.ModelSerializer):
     age_years = serializers.IntegerField(read_only=True)
+    breed = serializers.CharField(source="breed_raw")
 
     class Meta:
         model = Dog
@@ -15,6 +16,8 @@ class DogSerializer(serializers.ModelSerializer):
             "owner",
             "name",
             "breed",
+            "breed_raw",
+            "breed_normalized",
             "breed_group",
             "weight_kg",
             "size_category",
@@ -36,6 +39,8 @@ class DogSerializer(serializers.ModelSerializer):
         read_only_fields = (
             "id",
             "owner",
+            "breed_raw",
+            "breed_normalized",
             "vaccine_approval_status",
             "vaccine_review_note",
             "vaccine_reviewed_at",
@@ -52,10 +57,9 @@ class DogSerializer(serializers.ModelSerializer):
         return attrs
 
     def validate_breed(self, value: str) -> str:
-        normalized = value.strip()
-        if not normalized:
+        if not value.strip():
             raise serializers.ValidationError("犬種は必須です。")
-        return normalized
+        return value
 
     def validate_breed_group(self, value: str | None) -> str | None:
         if value is None:
@@ -91,6 +95,11 @@ class DogSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         self._set_pending_review_if_needed(validated_data)
         return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["breed"] = instance.breed_normalized
+        return data
 
 
 class DogVaccineReviewSerializer(serializers.Serializer):
