@@ -1,13 +1,19 @@
 ﻿from datetime import datetime, timedelta
 
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from rest_framework import permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.checkins.models import CheckinLog, Entry
-from apps.checkins.serializers import CheckinLogSerializer, CheckoutSerializer, QrCheckinSerializer
+from apps.checkins.serializers import (
+    AdminUsageEntrySerializer,
+    CheckinLogSerializer,
+    CheckoutSerializer,
+    QrCheckinSerializer,
+)
 from apps.reservations.models import FacilityRule, Reservation
 from apps.reservations.services import reconcile_reservation_statuses
 
@@ -314,3 +320,38 @@ class CheckinLogViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CheckinLogSerializer
     permission_classes = [permissions.IsAdminUser]
     queryset = CheckinLog.objects.select_related("reservation", "reservation__user").all()
+
+
+class AdminUsageReportView(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    def get(self, request, *args, **kwargs):
+        queryset = Entry.objects.select_related("reservation", "user").order_by("-checked_in_at", "-id")
+
+        date_from = request.query_params.get("date_from")
+        if date_from:
+            queryset = queryset.filter(checked_in_at__date__gte=date_from)
+
+        date_to = request.query_params.get("date_to")
+        if date_to:
+            queryset = queryset.filter(checked_in_at__date__lte=date_to)
+
+        status_query = request.query_params.get("status")
+        if status_query:
+            queryset = queryset.filter(status=status_query)
+
+        search = request.query_params.get("search", "").strip()
+        if search:
+            search_filter = (
+                Q(dog_name_snapshot__icontains=search)
+                | Q(breed_snapshot__icontains=search)
+                | Q(size_category_snapshot__icontains=search)
+                | Q(user__display_name__icontains=search)
+                | Q(user__username__icontains=search)
+            )
+            if search.isdigit():
+                search_filter |= Q(reservation__id=int(search))
+            queryset = queryset.filter(search_filter)
+
+        serializer = AdminUsageEntrySerializer(queryset, many=True)
+        return Response(serializer.data)

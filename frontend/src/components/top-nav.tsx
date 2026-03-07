@@ -10,7 +10,6 @@ const links = [
   { href: "/dogs", label: "犬登録" },
   { href: "/reservations", label: "予約" },
   { href: "/checkin", label: "QRチェックイン" },
-  { href: "/admin", label: "管理" },
 ];
 
 export function TopNav() {
@@ -48,7 +47,7 @@ export function TopNav() {
         </div>
       </div>
       <nav className="flex flex-wrap gap-2">
-        {links.map((link) => {
+        {[...links, ...(user?.is_staff ? [{ href: "/admin", label: "管理" }] : [])].map((link) => {
           const active = pathname === link.href || pathname.startsWith(`${link.href}/`);
           return (
             <Link

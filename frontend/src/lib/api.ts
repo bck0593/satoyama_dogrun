@@ -1,6 +1,7 @@
 ﻿import { API_BASE_URL } from "@/src/lib/config";
 import { tokenStorage } from "@/src/lib/auth";
 import type {
+  AdminUsageEntry,
   BreedStatsPeriod,
   BreedStatsResponse,
   CheckinQrPreview,
@@ -261,6 +262,10 @@ export const apiClient = {
     return apiFormRequest<Dog>(`/dogs/${dogId}/`, formData, "PATCH");
   },
 
+  async deleteDog(dogId: number) {
+    return apiRequest<void>(`/dogs/${dogId}/`, { method: "DELETE" });
+  },
+
   async getReservations() {
     const payload = await apiRequest<Reservation[] | { results: Reservation[] }>("/reservations/");
     return asList(payload);
@@ -444,6 +449,16 @@ export const apiClient = {
         }
     >("/admin/checkins/");
     return asList(payload);
+  },
+
+  async getAdminUsageReport(input?: { date_from?: string; date_to?: string; status?: string; search?: string }) {
+    const params = new URLSearchParams();
+    if (input?.date_from) params.set("date_from", input.date_from);
+    if (input?.date_to) params.set("date_to", input.date_to);
+    if (input?.status) params.set("status", input.status);
+    if (input?.search) params.set("search", input.search);
+    const query = params.toString();
+    return apiRequest<AdminUsageEntry[]>(`/admin/usage-report${query ? `?${query}` : ""}`);
   },
 
   async getAdminSales() {

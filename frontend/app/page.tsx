@@ -101,7 +101,7 @@ export default function TopPage() {
             <Wallet className="mr-2 h-4 w-4 text-[#f0b90b]" />
             利用料金
           </h2>
-          <p className="text-sm text-[#35588f]">1頭あたり 1,500円（税込）</p>
+          <p className="text-sm text-[#35588f]">1頭あたり 200円（税込）</p>
           <p className="mt-1 text-xs text-[#5f79a3]">事前決済・QRチェックインで、当日の受付をスムーズにします。</p>
           <Link href="/live-status" className="mt-3 inline-flex items-center text-sm font-semibold text-[#083a82]">
             <Clock3 className="mr-1 h-4 w-4" />

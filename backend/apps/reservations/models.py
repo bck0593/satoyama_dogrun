@@ -25,7 +25,7 @@ class FacilityRule(models.Model):
     max_no_show_before_suspension = models.PositiveIntegerField(default=2)
     suspension_days = models.PositiveIntegerField(default=14)
     rain_closure_enabled = models.BooleanField(default=False)
-    base_fee_per_dog = models.DecimalField(max_digits=8, decimal_places=2, default=Decimal("1500.00"))
+    base_fee_per_dog = models.DecimalField(max_digits=8, decimal_places=2, default=Decimal("200.00"))
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

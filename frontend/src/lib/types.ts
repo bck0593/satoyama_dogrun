@@ -5,6 +5,7 @@
   email: string;
   phone_number: string;
   line_user_id: string;
+  is_staff: boolean;
   no_show_count: number;
   suspended_until: string | null;
   membership_tier: "regular" | "premium";
@@ -153,6 +154,24 @@ export type PaymentHistoryItem = {
   refunded_amount: string;
   idempotency_key?: string;
   created_at: string;
+};
+
+export type AdminUsageEntry = {
+  id: number;
+  reservation_id: number;
+  reservation_date: string | null;
+  reservation_start_time: string | null;
+  reservation_end_time: string | null;
+  user_display_name: string;
+  dog_name_snapshot: string;
+  breed_snapshot: string;
+  size_category_snapshot: "small" | "medium" | "large" | string;
+  weight_kg_snapshot: string;
+  status: "in" | "out" | "invalid" | string;
+  source: string;
+  checked_in_at: string;
+  checked_out_at: string | null;
+  usage_minutes: number;
 };
 
 export type CheckinQrPreview = {

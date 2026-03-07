@@ -59,6 +59,44 @@ function vaccineStatusClass(status: Dog["vaccine_approval_status"]) {
   return "bg-amber-50 text-amber-700";
 }
 
+function renderReservationHistoryCard(reservation: Reservation) {
+  const usageMinutes = deriveUsageMinutes(
+    reservation.checked_in_at,
+    reservation.actual_checked_out_at,
+    reservation.actual_duration_minutes,
+  );
+
+  return (
+    <div key={reservation.id} className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+      <p className="font-semibold text-gray-900">
+        利用日時: {formatReservationDate(reservation.date)} {reservation.start_time.slice(0, 5)} -{" "}
+        {reservation.end_time.slice(0, 5)}
+      </p>
+      {reservation.checked_in_at ? (
+        <p className="text-gray-600">
+          実利用時間: {formatTime(reservation.checked_in_at)} -{" "}
+          {reservation.actual_checked_out_at ? formatTime(reservation.actual_checked_out_at) : "利用中"}{" "}
+          {usageMinutes !== null ? `(${usageMinutes}分)` : ""}
+        </p>
+      ) : (
+        <p className="text-gray-600">実利用時間: 未チェックイン</p>
+      )}
+      <p className="mt-1 text-gray-600">予約日時: {formatDateTime(reservation.created_at)}</p>
+      <p className="text-gray-600">支払日時: {formatDateTime(reservation.paid_at)}</p>
+      <p className="text-gray-600">
+        利用犬:{" "}
+        {reservation.reservation_dogs.length
+          ? reservation.reservation_dogs.map((dog) => dog.dog_name).join(" / ")
+          : "未登録"}
+      </p>
+      <p className="mt-1 text-gray-600">
+        状態: {RESERVATION_STATUS_LABEL[reservation.status] || reservation.status} /{" "}
+        {PAYMENT_STATUS_LABEL[reservation.payment_status] || reservation.payment_status}
+      </p>
+    </div>
+  );
+}
+
 export default function MyPage() {
   const { user, refreshProfile } = useAuth();
   const [dogs, setDogs] = useState<Dog[]>([]);
@@ -74,6 +112,7 @@ export default function MyPage() {
   const [editingDogId, setEditingDogId] = useState<number | null>(null);
   const [editingForm, setEditingForm] = useState<Partial<Dog>>({});
   const [editingFile, setEditingFile] = useState<File | null>(null);
+  const [deletingDogId, setDeletingDogId] = useState<number | null>(null);
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -86,7 +125,7 @@ export default function MyPage() {
       apiClient.getPaymentHistory(),
     ]);
 
-    setDogs(dogData);
+    setDogs(dogData.filter((dog) => dog.is_active));
     setReservations(reservationData);
     setPayments(paymentData);
   }, []);
@@ -112,6 +151,8 @@ export default function MyPage() {
         ),
     [reservations],
   );
+  const recentReservations = useMemo(() => sortedReservations.slice(0, 5), [sortedReservations]);
+  const olderReservations = useMemo(() => sortedReservations.slice(5), [sortedReservations]);
 
   const isSetup = useMemo(
     () => Boolean(user && (!user.display_name || !user.phone_number)),
@@ -177,6 +218,27 @@ export default function MyPage() {
     }
   };
 
+  const deleteDog = async (dog: Dog) => {
+    if (!window.confirm(`「${dog.name}」を削除します。予約履歴に使われている犬情報は残ります。`)) {
+      return;
+    }
+
+    setDeletingDogId(dog.id);
+    setError(null);
+
+    try {
+      await apiClient.deleteDog(dog.id);
+      if (editingDogId === dog.id) {
+        setEditingDogId(null);
+      }
+      setDogs((prev) => prev.filter((item) => item.id !== dog.id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "犬情報の削除に失敗しました。");
+    } finally {
+      setDeletingDogId(null);
+    }
+  };
+
   return (
     <AuthGuard>
       <MobilePage>
@@ -239,9 +301,19 @@ export default function MyPage() {
                 <div key={dog.id} className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm">
                   <div className="flex items-center justify-between">
                     <p className="font-semibold text-gray-900">{dog.name}</p>
-                    <button type="button" onClick={() => startEditDog(dog)} className="text-xs text-orange-600">
-                      編集
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button type="button" onClick={() => startEditDog(dog)} className="text-xs text-orange-600">
+                        編集
+                      </button>
+                      <button
+                        type="button"
+                        disabled={deletingDogId === dog.id}
+                        onClick={() => deleteDog(dog).catch(() => null)}
+                        className="text-xs text-red-600 disabled:opacity-50"
+                      >
+                        {deletingDogId === dog.id ? "削除中..." : "削除"}
+                      </button>
+                    </div>
                   </div>
                   <p className="text-gray-600">
                     {dog.breed}
@@ -364,43 +436,15 @@ export default function MyPage() {
           <section className="section-card">
             <h2 className="mb-2 text-base font-bold text-gray-900">利用履歴</h2>
             <div className="space-y-2 text-sm">
-              {sortedReservations.map((reservation) => {
-                const usageMinutes = deriveUsageMinutes(
-                  reservation.checked_in_at,
-                  reservation.actual_checked_out_at,
-                  reservation.actual_duration_minutes,
-                );
-
-                return (
-                  <div key={reservation.id} className="rounded-xl border border-gray-200 bg-gray-50 p-3">
-                    <p className="font-semibold text-gray-900">
-                      利用日時: {formatReservationDate(reservation.date)} {reservation.start_time.slice(0, 5)} -{" "}
-                      {reservation.end_time.slice(0, 5)}
-                    </p>
-                    {reservation.checked_in_at ? (
-                      <p className="text-gray-600">
-                        実利用時間: {formatTime(reservation.checked_in_at)} -{" "}
-                        {reservation.actual_checked_out_at ? formatTime(reservation.actual_checked_out_at) : "利用中"}{" "}
-                        {usageMinutes !== null ? `(${usageMinutes}分)` : ""}
-                      </p>
-                    ) : (
-                      <p className="text-gray-600">実利用時間: 未チェックイン</p>
-                    )}
-                    <p className="mt-1 text-gray-600">予約日時: {formatDateTime(reservation.created_at)}</p>
-                    <p className="text-gray-600">支払日時: {formatDateTime(reservation.paid_at)}</p>
-                    <p className="text-gray-600">
-                      利用犬:{" "}
-                      {reservation.reservation_dogs.length
-                        ? reservation.reservation_dogs.map((dog) => dog.dog_name).join(" / ")
-                        : "未登録"}
-                    </p>
-                    <p className="mt-1 text-gray-600">
-                      状態: {RESERVATION_STATUS_LABEL[reservation.status] || reservation.status} /{" "}
-                      {PAYMENT_STATUS_LABEL[reservation.payment_status] || reservation.payment_status}
-                    </p>
-                  </div>
-                );
-              })}
+              {recentReservations.map((reservation) => renderReservationHistoryCard(reservation))}
+              {olderReservations.length ? (
+                <details className="rounded-xl border border-gray-200 bg-white p-3">
+                  <summary className="cursor-pointer text-sm font-semibold text-orange-600">
+                    過去の利用履歴を表示 ({olderReservations.length}件)
+                  </summary>
+                  <div className="mt-3 space-y-2">{olderReservations.map((reservation) => renderReservationHistoryCard(reservation))}</div>
+                </details>
+              ) : null}
               {!sortedReservations.length ? <p className="text-sm text-gray-500">利用履歴がありません。</p> : null}
             </div>
           </section>

@@ -5,6 +5,7 @@ from rest_framework.response import Response
 
 from apps.dogs.models import Dog, RestrictedBreed
 from apps.dogs.serializers import DogSerializer, DogVaccineReviewSerializer, RestrictedBreedSerializer
+from apps.reservations.models import Reservation, ReservationDog
 
 
 class DogViewSet(viewsets.ModelViewSet):
@@ -18,6 +19,24 @@ class DogViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    def destroy(self, request, *args, **kwargs):
+        dog = self.get_object()
+        active_reservation_exists = ReservationDog.objects.filter(
+            dog=dog,
+            reservation__status__in=Reservation.active_statuses(),
+        ).exists()
+        if active_reservation_exists:
+            return Response(
+                {"detail": "有効な予約に紐づく犬は削除できません。予約をキャンセルしてから再度お試しください。"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if dog.is_active:
+            dog.is_active = False
+            dog.save(update_fields=["is_active", "updated_at"])
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class AdminDogViewSet(viewsets.ReadOnlyModelViewSet):

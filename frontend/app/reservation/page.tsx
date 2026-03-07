@@ -12,7 +12,7 @@ import { apiClient } from "@/src/lib/api";
 import { toDateString } from "@/src/lib/date-utils";
 import type { SlotAvailability } from "@/src/lib/types";
 
-const FEE_PER_DOG = 1500;
+const FEE_PER_DOG = 200;
 
 const CALENDAR_CLASS_NAMES = {
   month_caption: "flex h-10 items-center justify-center px-10",
@@ -252,7 +252,7 @@ export default function ReservationPage() {
               <CreditCard className="mr-2 h-4 w-4 text-emerald-600" />
               料金
             </h2>
-            <p className="text-sm text-gray-700">1頭 1,500円 × {selectedDogCount} 頭</p>
+            <p className="text-sm text-gray-700">1頭 200円 × {selectedDogCount} 頭</p>
             <p className="mt-1 text-xl font-bold text-gray-900">{amount.toLocaleString()} 円</p>
             <p className="mt-1 text-xs text-gray-500">Stripeでオンライン決済します。</p>
           </section>

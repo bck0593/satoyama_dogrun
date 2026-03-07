@@ -69,6 +69,12 @@ _CANONICAL_TO_ALIASES: dict[str, tuple[str, ...]] = {
         "welsh corgi pembroke",
         "corgi",
     ),
+    "\u30a2\u30e1\u30ea\u30ab\u30f3\u30fb\u30d4\u30c3\u30c8\u30fb\u30d6\u30eb\u30fb\u30c6\u30ea\u30a2": (
+        "\u30a2\u30e1\u30ea\u30ab\u30f3\u30fb\u30d4\u30c3\u30c8\u30fb\u30d6\u30eb\u30fb\u30c6\u30ea\u30a2",
+        "\u30a2\u30e1\u30ea\u30ab\u30f3\u30d4\u30c3\u30c8\u30d6\u30eb\u30c6\u30ea\u30a2",
+        "american pit bull terrier",
+        "pit bull terrier",
+    ),
     "\u30df\u30c3\u30af\u30b9": (
         "\u30df\u30c3\u30af\u30b9",
         "\u30df\u30c3\u30af\u30b9\u72ac",

@@ -23,6 +23,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "email",
             "phone_number",
             "line_user_id",
+            "is_staff",
             "no_show_count",
             "suspended_until",
             "membership_tier",
@@ -32,6 +33,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         read_only_fields = (
             "id",
             "line_user_id",
+            "is_staff",
             "no_show_count",
             "suspended_until",
             "membership_tier",

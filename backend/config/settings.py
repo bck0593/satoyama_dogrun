@@ -10,10 +10,39 @@ from dotenv import load_dotenv
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+TRUE_VALUES = {"1", "true", "yes", "on"}
+FALSE_VALUES = {"0", "false", "no", "off"}
 
 
 def env_bool(name: str, default: bool) -> bool:
-    return os.getenv(name, str(default)).strip().lower() in {"1", "true", "yes", "on"}
+    value = os.getenv(name)
+    if value is None:
+        return default
+    normalized = value.strip().lower()
+    if normalized in TRUE_VALUES:
+        return True
+    if normalized in FALSE_VALUES:
+        return False
+    return default
+
+
+def build_database_config() -> dict:
+    database_url = os.getenv("DATABASE_URL", "").strip()
+    if database_url:
+        use_ssl_require = (not DEBUG) and not database_url.startswith("sqlite")
+        return {
+            "default": dj_database_url.parse(
+                database_url,
+                conn_max_age=600,
+                ssl_require=use_ssl_require,
+            )
+        }
+    return {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 
 DEPLOY_ENV = os.getenv("DEPLOY_ENV", "development").strip().lower()
@@ -75,15 +104,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
-database_url = os.getenv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/dogrun")
-use_ssl_require = (not DEBUG) and not database_url.startswith("sqlite")
-DATABASES = {
-    "default": dj_database_url.parse(
-        database_url,
-        conn_max_age=600,
-        ssl_require=use_ssl_require,
-    )
-}
+DATABASES = build_database_config()
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
