@@ -59,6 +59,10 @@ class Reservation(models.Model):
         REFUNDED = "refunded", "返金済み"
         FAILED = "failed", "決済失敗"
 
+    class CancelledByRole(models.TextChoices):
+        USER = "user", "ユーザー"
+        ADMIN = "admin", "運営"
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="reservations")
     date = models.DateField()
     start_time = models.TimeField()
@@ -75,6 +79,15 @@ class Reservation(models.Model):
     paid_at = models.DateTimeField(null=True, blank=True)
     checked_in_at = models.DateTimeField(null=True, blank=True)
     cancelled_at = models.DateTimeField(null=True, blank=True)
+    cancel_reason = models.TextField(blank=True)
+    cancelled_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="cancelled_reservations",
+    )
+    cancelled_by_role = models.CharField(max_length=20, choices=CancelledByRole.choices, blank=True)
     no_show_marked_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

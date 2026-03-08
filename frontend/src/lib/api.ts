@@ -274,7 +274,7 @@ export const apiClient = {
   async createReservation(input: {
     date: string;
     start_time: string;
-    end_time: string;
+    end_time?: string;
     party_size: number;
     dog_ids: number[];
     note?: string;
@@ -283,7 +283,14 @@ export const apiClient = {
   },
 
   async cancelReservation(reservationId: number, reason = "") {
-    return apiRequest<{ reservation_id: number; status: string; refund_eligible: boolean }>(
+    return apiRequest<{
+      reservation_id: number;
+      status: string;
+      refund_eligible: boolean;
+      cancelled_at: string | null;
+      cancel_reason: string;
+      cancelled_by_role: string;
+    }>(
       `/reservations/${reservationId}/cancel/`,
       {
         method: "POST",

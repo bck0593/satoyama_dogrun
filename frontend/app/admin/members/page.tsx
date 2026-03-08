@@ -12,10 +12,6 @@ function formatDate(value: string | null) {
   return new Date(value).toLocaleDateString("ja-JP");
 }
 
-function formatMembership(tier: Member["membership_tier"]) {
-  return tier === "premium" ? "プレミアム" : "レギュラー";
-}
-
 function isSuspended(value: string | null) {
   if (!value) return false;
   const suspendedUntil = new Date(value);
@@ -57,7 +53,7 @@ export default function AdminMembersPage() {
   const summary = useMemo(
     () => ({
       total: filtered.length,
-      premium: filtered.filter((member) => member.membership_tier === "premium").length,
+      withDogs: filtered.filter((member) => member.dog_count > 0).length,
       suspended: filtered.filter((member) => isSuspended(member.suspended_until)).length,
       staff: filtered.filter((member) => member.is_staff).length,
     }),
@@ -69,7 +65,7 @@ export default function AdminMembersPage() {
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="text-2xl font-bold text-slate-900">会員管理</h2>
         <p className="mt-1 text-sm text-slate-600">
-          会員の連絡先、LINE ID、登録犬数、no-show 状況、利用停止状態をまとめて確認できます。
+          会員の連絡先、LINE ID、登録犬数、no-show 状況、利用停止状況を確認できます。
         </p>
         {error ? <p className="mt-2 text-sm font-semibold text-red-600">{error}</p> : null}
       </section>
@@ -82,26 +78,26 @@ export default function AdminMembersPage() {
           id="member-search"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="氏名 / メール / 電話番号 / LINE ID"
+          placeholder="名前 / メール / 電話番号 / LINE ID"
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-blue-500 focus:ring-2"
         />
       </section>
 
       <section className="grid gap-4 md:grid-cols-4">
         <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-sm font-semibold text-slate-500">会員総数</p>
+          <p className="text-sm font-semibold text-slate-500">会員数</p>
           <p className="mt-2 text-3xl font-black text-slate-900">{summary.total}</p>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-sm font-semibold text-slate-500">プレミアム</p>
-          <p className="mt-2 text-3xl font-black text-slate-900">{summary.premium}</p>
+          <p className="text-sm font-semibold text-slate-500">犬登録済み</p>
+          <p className="mt-2 text-3xl font-black text-slate-900">{summary.withDogs}</p>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <p className="text-sm font-semibold text-slate-500">利用停止中</p>
           <p className="mt-2 text-3xl font-black text-slate-900">{summary.suspended}</p>
         </article>
         <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-sm font-semibold text-slate-500">管理者</p>
+          <p className="text-sm font-semibold text-slate-500">運営者</p>
           <p className="mt-2 text-3xl font-black text-slate-900">{summary.staff}</p>
         </article>
       </section>
@@ -114,14 +110,9 @@ export default function AdminMembersPage() {
                 <p className="text-base font-bold text-slate-900">{member.display_name || member.username}</p>
                 <p className="text-xs text-slate-500">@{member.username}</p>
               </div>
-              <div className="flex flex-col items-end gap-1">
-                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
-                  {formatMembership(member.membership_tier)}
-                </span>
-                {member.is_staff ? (
-                  <span className="rounded-full bg-slate-900 px-2 py-0.5 text-xs font-semibold text-white">管理者</span>
-                ) : null}
-              </div>
+              {member.is_staff ? (
+                <span className="rounded-full bg-slate-900 px-2 py-0.5 text-xs font-semibold text-white">運営者</span>
+              ) : null}
             </div>
             <dl className="mt-3 space-y-2 text-sm text-slate-700">
               <div>
@@ -167,8 +158,7 @@ export default function AdminMembersPage() {
                 <th className="px-3 py-2">会員</th>
                 <th className="px-3 py-2">連絡先</th>
                 <th className="px-3 py-2">LINE / ユーザー名</th>
-                <th className="px-3 py-2">種別</th>
-                <th className="px-3 py-2">犬数</th>
+                <th className="px-3 py-2">登録犬数</th>
                 <th className="px-3 py-2">no-show</th>
                 <th className="px-3 py-2">利用停止</th>
                 <th className="px-3 py-2">登録日</th>
@@ -180,11 +170,8 @@ export default function AdminMembersPage() {
                   <td className="px-3 py-3">
                     <p className="font-semibold text-slate-900">{member.display_name || member.username}</p>
                     <div className="mt-1 flex flex-wrap gap-1">
-                      <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
-                        {formatMembership(member.membership_tier)}
-                      </span>
                       {member.is_staff ? (
-                        <span className="rounded-full bg-slate-900 px-2 py-0.5 text-xs font-semibold text-white">管理者</span>
+                        <span className="rounded-full bg-slate-900 px-2 py-0.5 text-xs font-semibold text-white">運営者</span>
                       ) : null}
                     </div>
                   </td>
@@ -196,7 +183,6 @@ export default function AdminMembersPage() {
                     <p>{member.line_user_id || "-"}</p>
                     <p className="mt-1 text-xs text-slate-500">@{member.username}</p>
                   </td>
-                  <td className="px-3 py-3">{formatMembership(member.membership_tier)}</td>
                   <td className="px-3 py-3">{member.dog_count}</td>
                   <td className="px-3 py-3">{member.no_show_count}</td>
                   <td className="px-3 py-3">

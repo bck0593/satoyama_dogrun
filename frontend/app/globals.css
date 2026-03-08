@@ -41,6 +41,12 @@
       radial-gradient(110% 55% at 50% -15%, #d6e4fb 0%, rgba(214, 228, 251, 0) 70%),
       linear-gradient(180deg, #eef3f9 0%, #e7eef8 48%, #eaf1fb 100%);
     color: var(--text-strong);
+    font-family:
+      "Hiragino Sans",
+      "Yu Gothic UI",
+      "Yu Gothic",
+      "Meiryo",
+      sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }

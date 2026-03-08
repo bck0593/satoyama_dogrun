@@ -11,9 +11,6 @@ User = get_user_model()
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    membership_tier = serializers.SerializerMethodField()
-    membership_joined_at = serializers.SerializerMethodField()
-
     class Meta:
         model = User
         fields = (
@@ -26,8 +23,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "is_staff",
             "no_show_count",
             "suspended_until",
-            "membership_tier",
-            "membership_joined_at",
             "created_at",
         )
         read_only_fields = (
@@ -36,20 +31,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "is_staff",
             "no_show_count",
             "suspended_until",
-            "membership_tier",
-            "membership_joined_at",
             "created_at",
         )
-
-    def get_membership_tier(self, obj: User) -> str:
-        if hasattr(obj, "membership"):
-            return obj.membership.tier
-        return "regular"
-
-    def get_membership_joined_at(self, obj: User):
-        if hasattr(obj, "membership"):
-            return obj.membership.joined_at
-        return None
 
 
 class LineLoginSerializer(serializers.Serializer):
@@ -117,8 +100,6 @@ class LineLoginSerializer(serializers.Serializer):
 
 class AdminMemberSerializer(serializers.ModelSerializer):
     dog_count = serializers.IntegerField(read_only=True)
-    membership_tier = serializers.SerializerMethodField()
-    membership_joined_at = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -129,20 +110,10 @@ class AdminMemberSerializer(serializers.ModelSerializer):
             "email",
             "phone_number",
             "line_user_id",
+            "is_staff",
             "dog_count",
             "no_show_count",
             "suspended_until",
-            "membership_tier",
-            "membership_joined_at",
             "created_at",
         )
-
-    def get_membership_tier(self, obj: User) -> str:
-        if hasattr(obj, "membership"):
-            return obj.membership.tier
-        return "regular"
-
-    def get_membership_joined_at(self, obj: User):
-        if hasattr(obj, "membership"):
-            return obj.membership.joined_at
-        return None
+        read_only_fields = fields

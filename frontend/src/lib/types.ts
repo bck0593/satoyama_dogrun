@@ -8,8 +8,6 @@
   is_staff: boolean;
   no_show_count: number;
   suspended_until: string | null;
-  membership_tier: "regular" | "premium";
-  membership_joined_at: string | null;
   created_at: string;
 };
 
@@ -62,6 +60,10 @@ export type Reservation = {
   actual_checked_out_at?: string | null;
   actual_duration_minutes?: number | null;
   cancelled_at: string | null;
+  cancel_reason: string;
+  cancelled_by: number | null;
+  cancelled_by_role: "user" | "admin" | "";
+  cancelled_by_display_name?: string | null;
   created_at: string;
   reservation_dogs: ReservationDog[];
 };

@@ -22,13 +22,11 @@ class ReservationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         reconcile_reservation_statuses()
-        queryset = Reservation.objects.select_related("user").prefetch_related(
+        queryset = Reservation.objects.select_related("user", "cancelled_by").prefetch_related(
             "reservation_dogs",
             "reservation_dogs__dog",
             "checkin_logs",
         )
-        if self.request.user.is_staff:
-            return queryset
         return queryset.filter(user=self.request.user)
 
     def get_serializer_class(self):
@@ -45,7 +43,10 @@ class ReservationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def cancel(self, request, pk=None):
         reservation = self.get_object()
-        serializer = ReservationCancelSerializer(data=request.data)
+        serializer = ReservationCancelSerializer(
+            data=request.data,
+            context={"request": request, "reservation": reservation},
+        )
         serializer.is_valid(raise_exception=True)
 
         if reservation.status in [
@@ -62,16 +63,35 @@ class ReservationViewSet(viewsets.ModelViewSet):
             rule.cancellation_refund_hours
         )
 
+        cancelled_by_role = (
+            Reservation.CancelledByRole.ADMIN
+            if request.user.is_staff and request.user.id != reservation.user_id
+            else Reservation.CancelledByRole.USER
+        )
         reservation.status = Reservation.Status.CANCELLED
         reservation.cancelled_at = timezone.now()
-        reservation.note = (reservation.note + "\n" if reservation.note else "") + serializer.validated_data.get("reason", "")
-        reservation.save(update_fields=["status", "cancelled_at", "note", "updated_at"])
+        reservation.cancel_reason = serializer.validated_data.get("reason", "")
+        reservation.cancelled_by = request.user
+        reservation.cancelled_by_role = cancelled_by_role
+        reservation.save(
+            update_fields=[
+                "status",
+                "cancelled_at",
+                "cancel_reason",
+                "cancelled_by",
+                "cancelled_by_role",
+                "updated_at",
+            ]
+        )
 
         return Response(
             {
                 "reservation_id": reservation.id,
                 "status": reservation.status,
                 "refund_eligible": should_refund,
+                "cancelled_at": reservation.cancelled_at,
+                "cancel_reason": reservation.cancel_reason,
+                "cancelled_by_role": reservation.cancelled_by_role,
             }
         )
 
@@ -87,7 +107,11 @@ class ReservationViewSet(viewsets.ModelViewSet):
 class AdminReservationViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = ReservationSerializer
     permission_classes = [permissions.IsAdminUser]
-    queryset = Reservation.objects.select_related("user").prefetch_related("reservation_dogs", "reservation_dogs__dog", "checkin_logs")
+    queryset = Reservation.objects.select_related("user", "cancelled_by").prefetch_related(
+        "reservation_dogs",
+        "reservation_dogs__dog",
+        "checkin_logs",
+    )
 
 
 class ReservationAvailabilityView(APIView):

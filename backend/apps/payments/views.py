@@ -59,7 +59,7 @@ class CreateCheckoutSessionView(APIView):
         except Reservation.DoesNotExist:
             return Response({"detail": "予約が見つかりません。"}, status=status.HTTP_404_NOT_FOUND)
 
-        if not request.user.is_staff and reservation.user_id != request.user.id:
+        if reservation.user_id != request.user.id:
             return Response({"detail": "この予約は決済できません。"}, status=status.HTTP_403_FORBIDDEN)
 
         if reservation.payment_status == Reservation.PaymentStatus.PAID:
@@ -246,7 +246,9 @@ class StripeWebhookView(APIView):
 
         payment.reservation.payment_status = Reservation.PaymentStatus.REFUNDED
         payment.reservation.status = Reservation.Status.CANCELLED
-        payment.reservation.save(update_fields=["payment_status", "status", "updated_at"])
+        if not payment.reservation.cancelled_at:
+            payment.reservation.cancelled_at = timezone.now()
+        payment.reservation.save(update_fields=["payment_status", "status", "cancelled_at", "updated_at"])
 
 
 class AdminSalesView(APIView):

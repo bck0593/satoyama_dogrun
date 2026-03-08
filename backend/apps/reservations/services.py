@@ -18,6 +18,13 @@ def generate_slot_windows(target_date, rule: FacilityRule):
     return slots
 
 
+def resolve_slot_window(target_date, requested_start_time, rule: FacilityRule):
+    for start_time, end_time in generate_slot_windows(target_date, rule):
+        if start_time == requested_start_time:
+            return start_time, end_time
+    return None
+
+
 def expire_unpaid_reservations(now=None) -> int:
     current = now or timezone.now()
     target_date = current.date()

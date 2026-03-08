@@ -13,8 +13,6 @@ class DogViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        if self.request.user.is_staff:
-            return Dog.objects.select_related("owner", "vaccine_reviewed_by").all()
         return Dog.objects.select_related("owner", "vaccine_reviewed_by").filter(owner=self.request.user)
 
     def perform_create(self, serializer):

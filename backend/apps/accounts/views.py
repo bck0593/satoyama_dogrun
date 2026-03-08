@@ -57,4 +57,4 @@ class AdminMemberViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAdminUser]
 
     def get_queryset(self):
-        return User.objects.select_related("membership").annotate(dog_count=Count("dogs")).order_by("-created_at")
+        return User.objects.annotate(dog_count=Count("dogs")).order_by("-created_at")

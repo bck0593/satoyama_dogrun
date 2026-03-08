@@ -10,6 +10,7 @@ from rest_framework import serializers
 from apps.checkins.models import CheckinLog
 from apps.dogs.models import Dog
 from apps.reservations.models import FacilityRule, NoShowRecord, Reservation, ReservationDog
+from apps.reservations.services import resolve_slot_window
 
 
 class ReservationDogSerializer(serializers.ModelSerializer):
@@ -22,6 +23,7 @@ class ReservationSerializer(serializers.ModelSerializer):
     reservation_dogs = ReservationDogSerializer(many=True, read_only=True)
     actual_checked_out_at = serializers.SerializerMethodField()
     actual_duration_minutes = serializers.SerializerMethodField()
+    cancelled_by_display_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Reservation
@@ -43,6 +45,10 @@ class ReservationSerializer(serializers.ModelSerializer):
             "actual_checked_out_at",
             "actual_duration_minutes",
             "cancelled_at",
+            "cancel_reason",
+            "cancelled_by",
+            "cancelled_by_role",
+            "cancelled_by_display_name",
             "created_at",
             "reservation_dogs",
         )
@@ -59,6 +65,10 @@ class ReservationSerializer(serializers.ModelSerializer):
             "actual_checked_out_at",
             "actual_duration_minutes",
             "cancelled_at",
+            "cancel_reason",
+            "cancelled_by",
+            "cancelled_by_role",
+            "cancelled_by_display_name",
             "created_at",
             "reservation_dogs",
         )
@@ -89,11 +99,16 @@ class ReservationSerializer(serializers.ModelSerializer):
             return max(int(elapsed.total_seconds() // 60), 0)
         return None
 
+    def get_cancelled_by_display_name(self, reservation: Reservation):
+        if not reservation.cancelled_by:
+            return None
+        return reservation.cancelled_by.display_name or reservation.cancelled_by.username
+
 
 class ReservationCreateSerializer(serializers.Serializer):
     date = serializers.DateField()
     start_time = serializers.TimeField()
-    end_time = serializers.TimeField()
+    end_time = serializers.CharField(required=False, allow_blank=True)
     party_size = serializers.IntegerField(min_value=1, default=1)
     dog_ids = serializers.ListField(child=serializers.IntegerField(), allow_empty=False)
     note = serializers.CharField(required=False, allow_blank=True)
@@ -111,13 +126,15 @@ class ReservationCreateSerializer(serializers.Serializer):
 
         target_date = attrs["date"]
         start_time = attrs["start_time"]
-        end_time = attrs["end_time"]
 
         if target_date < date.today():
             raise serializers.ValidationError("過去日の予約はできません。")
 
-        if datetime.combine(target_date, start_time) >= datetime.combine(target_date, end_time):
-            raise serializers.ValidationError("終了時刻は開始時刻より後にしてください。")
+        slot_window = resolve_slot_window(target_date, start_time, rule)
+        if not slot_window:
+            raise serializers.ValidationError("選択した時間帯は予約できません。")
+
+        _, end_time = slot_window
 
         dog_ids = list(dict.fromkeys(attrs["dog_ids"]))
         dogs = list(Dog.objects.filter(id__in=dog_ids, owner=user, is_active=True))
@@ -142,6 +159,7 @@ class ReservationCreateSerializer(serializers.Serializer):
 
         attrs["dogs"] = dogs
         attrs["rule"] = rule
+        attrs["end_time"] = end_time
         return attrs
 
     def create(self, validated_data):
@@ -238,6 +256,17 @@ class ReservationCreateSerializer(serializers.Serializer):
 
 class ReservationCancelSerializer(serializers.Serializer):
     reason = serializers.CharField(required=False, allow_blank=True)
+
+    def validate(self, attrs):
+        request = self.context.get("request")
+        reservation: Reservation | None = self.context.get("reservation")
+        reason = attrs.get("reason", "").strip()
+
+        if request and reservation and request.user.is_staff and request.user.id != reservation.user_id and not reason:
+            raise serializers.ValidationError({"reason": "運営者がキャンセルする場合は理由を入力してください。"})
+
+        attrs["reason"] = reason
+        return attrs
 
 
 class ReservationNoShowSerializer(serializers.Serializer):
