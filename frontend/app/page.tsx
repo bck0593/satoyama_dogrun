@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { CalendarCheck2, ChevronRight, Clock3 } from "lucide-react";
 import { useMemo } from "react";
@@ -297,6 +298,16 @@ export default function TopPage() {
             <li>本日の予約がある場合は、現地でQRチェックインに進んでください。</li>
             <li>キャンセルが続くと一定期間予約できなくなる場合があります。</li>
           </ul>
+        </section>
+
+        <section className="px-2 py-2">
+          <Image
+            src="/images/fc-imabari-community-logo.jpg"
+            alt="FC IMABARI COMMUNITY"
+            width={1200}
+            height={630}
+            className="mx-auto h-auto w-full max-w-[320px] object-contain"
+          />
         </section>
       </div>
     </MobilePage>
