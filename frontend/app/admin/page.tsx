@@ -451,7 +451,8 @@ export default function AdminPage() {
         ))}
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+      <section className="hidden">
+        {false && (
         <article className="brand-card p-5">
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -490,6 +491,7 @@ export default function AdminPage() {
             ))}
           </div>
         </article>
+        )}
 
         <article className="brand-card p-5">
           <div className="flex items-start justify-between gap-3">
@@ -543,7 +545,7 @@ export default function AdminPage() {
         </article>
       </section>
 
-      <section className="brand-card p-5">
+      <section className="hidden">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-sm font-semibold text-slate-500">予約確認</p>
@@ -609,7 +611,7 @@ export default function AdminPage() {
         </div>
       </section>
 
-      <section className="brand-card p-5">
+      <section className="hidden">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-sm font-semibold text-slate-500">クイック操作</p>
