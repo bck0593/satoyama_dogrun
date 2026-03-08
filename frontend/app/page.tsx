@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -250,7 +250,6 @@ export default function TopPage() {
                 {formatReservationDate(latestReservation.date)} {latestReservation.start_time.slice(0, 5)} -{" "}
                 {latestReservation.end_time.slice(0, 5)}
               </p>
-              <p className="mt-1 text-sm text-[#557196]">次の予定はありません。最新の予約状況を表示しています。</p>
               <div className="mt-4 flex gap-2">
                 <Link
                   href="/mypage"
