@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarDays, CheckCircle2, CreditCard, Dog, Info, ShieldAlert, Users } from "lucide-react";
+import { CalendarDays, CheckCircle2, CreditCard, Dog, Info, Loader2, ShieldAlert, Users } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Calendar } from "@/components/ui/calendar";
@@ -288,10 +288,10 @@ export default function ReservationPage() {
                   </p>
                   <div className="mt-3 flex gap-2">
                     <Link
-                      href={dogs.length ? "/mypage" : "/dog-registration"}
+                      href="/dog-registration"
                       className="inline-flex rounded-xl bg-amber-500 px-3 py-2 font-bold text-white"
                     >
-                      {dogs.length ? (expiredApprovedDogs.length ? "犬情報を確認する" : "承認状況を見る") : "犬を登録する"}
+                      {dogs.length ? (expiredApprovedDogs.length ? "ワクチン期限を更新する" : "承認状況を見る") : "犬を登録する"}
                     </Link>
                   </div>
                 </div>
@@ -332,7 +332,12 @@ export default function ReservationPage() {
               </p>
             ) : null}
 
-            {availabilityLoading ? <p className="mt-3 text-sm text-gray-500">空き状況を確認しています...</p> : null}
+            {availabilityLoading ? (
+              <div className="mt-3 flex items-center gap-2 text-sm text-gray-500">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                空き状況を確認しています...
+              </div>
+            ) : null}
 
             {!availabilityLoading && !rainClosed && !slots.length ? (
               <p className="mt-3 text-sm text-gray-500">この日の予約枠はまだ公開されていません。</p>
@@ -497,11 +502,15 @@ export default function ReservationPage() {
             </div>
 
             {partySizeIssue ? (
-              <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700">
                 {partySizeIssue}
-              </p>
+              </div>
             ) : null}
-            {error || dogsError ? <p className="mt-4 text-sm text-red-600">{error || dogsError}</p> : null}
+            {error || dogsError ? (
+              <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">
+                {error || dogsError}
+              </div>
+            ) : null}
 
             {suspended ? (
               <Link
@@ -519,10 +528,10 @@ export default function ReservationPage() {
               </Link>
             ) : !selectableDogs.length ? (
               <Link
-                href="/mypage"
+                href="/dog-registration"
                 className="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-[#0a438d] px-4 py-3 text-sm font-bold text-white"
               >
-                {expiredApprovedDogs.length ? "犬情報を確認する" : "承認状況を確認する"}
+                {expiredApprovedDogs.length ? "ワクチン期限を更新する" : "承認状況を確認する"}
               </Link>
             ) : (
               <button
@@ -531,7 +540,12 @@ export default function ReservationPage() {
                 disabled={isSubmitDisabled}
                 className="mt-4 w-full rounded-2xl bg-[#0a438d] px-4 py-3 text-sm font-bold text-white disabled:opacity-50"
               >
-                {loading ? "処理中..." : "予約して決済へ進む"}
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    処理中...
+                  </span>
+                ) : "予約して決済へ進む"}
               </button>
             )}
           </section>

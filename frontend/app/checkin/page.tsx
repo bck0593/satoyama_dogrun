@@ -129,15 +129,12 @@ export default function CheckinPage() {
   return (
     <AuthGuard>
       <MobilePage>
-        <PageHeader title="チェックイン" description="当日の入場はここから。QRを読み取るだけで完了します" />
+        <PageHeader title="チェックイン" description="当日の入場はここから。QRを読み取るだけで完了します" backHref="/" />
 
         <div className="space-y-4 px-4 py-5">
           <section className="brand-card p-5">
             <div className="flex flex-wrap items-center gap-2">
               <StatusPill tone="brand">当日利用はこちら</StatusPill>
-              <StatusPill tone={cameraReady ? "success" : "neutral"}>
-                {cameraReady ? "カメラ起動中" : "カメラ未起動"}
-              </StatusPill>
             </div>
             <h2 className="mt-3 text-xl font-black text-[#153a71]">現地では、まずQRを読み取ってください。</h2>
             <ol className="mt-3 space-y-2 text-sm leading-6 text-[#567196]">
@@ -158,15 +155,26 @@ export default function CheckinPage() {
               </StatusPill>
             </div>
 
-            <button
-              type="button"
-              onClick={startCamera}
-              disabled={submitting}
-              className="mt-3 inline-flex w-full items-center justify-center rounded-2xl bg-[#0a438d] px-4 py-3 text-sm font-bold text-white disabled:opacity-60"
-            >
-              <Camera className="mr-2 h-4 w-4" />
-              {cameraReady ? "カメラを再起動" : "カメラを起動"}
-            </button>
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                onClick={startCamera}
+                disabled={submitting}
+                className="flex-1 inline-flex items-center justify-center rounded-2xl bg-[#0a438d] px-4 py-3 text-sm font-bold text-white disabled:opacity-60"
+              >
+                <Camera className="mr-2 h-4 w-4" />
+                {cameraReady ? "再起動" : "カメラを起動"}
+              </button>
+              {cameraReady ? (
+                <button
+                  type="button"
+                  onClick={stopCamera}
+                  className="rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm font-bold text-gray-700"
+                >
+                  停止
+                </button>
+              ) : null}
+            </div>
 
             <div className="mt-3 overflow-hidden rounded-2xl border border-gray-200 bg-black">
               {cameraReady ? (
