@@ -104,7 +104,7 @@ export default function AdminMembersPage() {
 
       <section className="grid gap-3 md:hidden">
         {filtered.map((member) => (
-          <article key={member.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <article key={member.id} className={`rounded-2xl border p-4 shadow-sm ${isSuspended(member.suspended_until) ? "border-red-200 bg-red-50" : "border-slate-200 bg-white"}`}>
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-base font-bold text-slate-900">{member.display_name || member.username}</p>
@@ -166,7 +166,7 @@ export default function AdminMembersPage() {
             </thead>
             <tbody>
               {filtered.map((member) => (
-                <tr key={member.id} className="border-b border-slate-100 align-top">
+                <tr key={member.id} className={`border-b border-slate-100 align-top ${isSuspended(member.suspended_until) ? "bg-red-50" : ""}`}>
                   <td className="px-3 py-3">
                     <p className="font-semibold text-slate-900">{member.display_name || member.username}</p>
                     <div className="mt-1 flex flex-wrap gap-1">

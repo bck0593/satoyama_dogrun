@@ -140,34 +140,46 @@ export default function AdminCheckinsPage() {
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="grid gap-3 md:grid-cols-4">
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="犬名 / 犬種 / 飼い主 / 予約ID"
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-blue-500 focus:ring-2"
-          />
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(event) => setDateFrom(event.target.value)}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-blue-500 focus:ring-2"
-          />
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(event) => setDateTo(event.target.value)}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-blue-500 focus:ring-2"
-          />
-          <select
-            value={status}
-            onChange={(event) => setStatus(event.target.value)}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-blue-500 focus:ring-2"
-          >
-            <option value="">状態: すべて</option>
-            <option value="in">利用中</option>
-            <option value="out">利用完了</option>
-            <option value="invalid">無効</option>
-          </select>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-slate-500">キーワード</label>
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="犬名 / 犬種 / 飼い主 / 予約ID"
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-blue-500 focus:ring-2"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-slate-500">開始日</label>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(event) => setDateFrom(event.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-blue-500 focus:ring-2"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-slate-500">終了日</label>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(event) => setDateTo(event.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-blue-500 focus:ring-2"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-slate-500">状態</label>
+            <select
+              value={status}
+              onChange={(event) => setStatus(event.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-blue-500 focus:ring-2"
+            >
+              <option value="">すべて</option>
+              <option value="in">利用中</option>
+              <option value="out">利用完了</option>
+              <option value="invalid">無効</option>
+            </select>
+          </div>
         </div>
       </section>
 
@@ -207,7 +219,15 @@ export default function AdminCheckinsPage() {
                   <td className="px-3 py-3 font-semibold text-slate-900">{formatEntryStatus(entry)}</td>
                   <td className="px-3 py-3">{entry.user_display_name}</td>
                   <td className="px-3 py-3">
-                    <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">{entry.status}</span>
+                    <span className={`rounded-full px-2 py-1 text-xs font-semibold ${
+                      entry.status === "in"
+                        ? "bg-emerald-100 text-emerald-800"
+                        : entry.status === "out"
+                          ? "bg-slate-100 text-slate-700"
+                          : "bg-red-100 text-red-700"
+                    }`}>
+                      {entry.status === "in" ? "利用中" : entry.status === "out" ? "利用完了" : "無効"}
+                    </span>
                   </td>
                 </tr>
               ))}

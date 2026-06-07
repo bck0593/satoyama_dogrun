@@ -91,6 +91,11 @@ export default function LoginPage() {
             </div>
           ) : null}
 
+          <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+            <p className="font-bold">これはデモ用のモック認証画面です</p>
+            <p className="mt-1">本番では LINE LIFF ログインに置き換わります。任意の LINE User ID を入力してログインできます。</p>
+          </div>
+
           <form className="space-y-3" onSubmit={onSubmit}>
             <label className="block text-sm font-medium text-gray-700">
               LINE User ID
@@ -102,7 +107,7 @@ export default function LoginPage() {
               />
             </label>
             <label className="block text-sm font-medium text-gray-700">
-              表示名
+              表示名（任意）
               <input
                 className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2"
                 value={displayName}
@@ -111,7 +116,7 @@ export default function LoginPage() {
               />
             </label>
             <label className="block text-sm font-medium text-gray-700">
-              メール
+              メール（任意）
               <input
                 type="email"
                 className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2"
@@ -121,24 +126,34 @@ export default function LoginPage() {
               />
             </label>
 
-            {error ? <p className="text-sm text-red-600">{error}</p> : null}
+            {error ? (
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">
+                {error}
+              </div>
+            ) : null}
 
             <button
               type="submit"
               disabled={loading}
               className="w-full rounded-xl bg-[#06c755] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
             >
-              {loading ? "ログイン中..." : "LINEでログイン"}
+              {loading ? "ログイン中..." : "LINEでログイン（デモ）"}
             </button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200" /></div>
+              <div className="relative flex justify-center"><span className="bg-white px-2 text-xs text-slate-400">または</span></div>
+            </div>
+
             <button
               type="button"
               disabled={loading}
               onClick={() => loginAsDummyAdmin().catch(() => null)}
-              className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 disabled:opacity-60"
+              className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 disabled:opacity-60"
             >
-              ダミー管理者でログイン
+              管理者デモアカウントでログイン
             </button>
-            <p className="text-xs text-slate-500">seed 済みの「運営管理者」で管理画面に入れます。</p>
+            <p className="text-center text-xs text-slate-400">seed 済みの「運営管理者」アカウントで管理画面に入れます</p>
           </form>
         </section>
       </div>

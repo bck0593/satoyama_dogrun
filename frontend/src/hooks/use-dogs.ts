@@ -42,5 +42,5 @@ export function useDogs(options: UseDogsOptions = {}) {
     reload().catch(() => null);
   }, [enabled, reload]);
 
-  return { dogs, loading, error, reload };
+  return { dogs, setDogs, loading, error, reload };
 }

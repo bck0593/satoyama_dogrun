@@ -11,7 +11,7 @@ const tabs = [
   { href: "/reservation", icon: CalendarDays, label: "予約" },
   { href: "/checkin", icon: QrCode, label: "入退場" },
   { href: "/live-status", icon: Radio, label: "利用状況" },
-  { href: "/mypage", icon: UserCircle2, label: "マイ" },
+  { href: "/mypage", icon: UserCircle2, label: "マイページ" },
 ];
 
 export default function BottomTabBar() {

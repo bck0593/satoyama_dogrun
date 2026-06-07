@@ -164,17 +164,17 @@ export default function AdminDogsPage() {
                       type="button"
                       disabled={savingDogId === dog.id}
                       onClick={() => submitReview(dog, "approved")}
-                      className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-bold text-white disabled:opacity-60"
+                      className="flex-1 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-60 sm:flex-none"
                     >
-                      承認
+                      {savingDogId === dog.id ? "処理中..." : "承認する"}
                     </button>
                     <button
                       type="button"
                       disabled={savingDogId === dog.id}
                       onClick={() => submitReview(dog, "rejected")}
-                      className="rounded-lg bg-red-600 px-3 py-2 text-sm font-bold text-white disabled:opacity-60"
+                      className="flex-1 rounded-lg border border-red-300 bg-white px-4 py-2.5 text-sm font-bold text-red-700 disabled:opacity-60 sm:flex-none"
                     >
-                      差戻し
+                      差し戻す
                     </button>
                   </div>
                 </div>

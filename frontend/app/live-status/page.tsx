@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Clock3, Dog, Radio, Users } from "lucide-react";
 
-import { AuthGuard } from "@/src/components/auth-guard";
 import { MobilePage } from "@/src/components/mobile-page";
 import { PageHeader } from "@/src/components/page-header";
 import { StatusPill } from "@/src/components/status-pill";
@@ -28,8 +27,7 @@ export default function LiveStatusPage() {
   const { stats, nextTodayReservation, congestionView, utilizationRate } = useLiveStatus();
 
   return (
-    <AuthGuard>
-      <MobilePage>
+    <MobilePage>
         <PageHeader title="ドッグラン利用状況" description="いま何頭いるか、空きがあるかを現地前に確認できます。" />
 
         <div className="space-y-4 px-4 py-5">
@@ -188,6 +186,5 @@ export default function LiveStatusPage() {
           </section>
         </div>
       </MobilePage>
-    </AuthGuard>
   );
 }

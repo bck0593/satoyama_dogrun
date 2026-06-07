@@ -76,13 +76,17 @@ export default function AdminReservationsPage() {
     async (reservation: Reservation, reason: string) => {
       setError(null);
       setNotice(null);
-      const result = await apiClient.cancelReservation(reservation.id, reason);
-      await load();
-      setNotice(
-        result.refund_eligible
-          ? `予約 #${reservation.id} を運営側でキャンセルしました。返金対象です。返金処理は別途対応が必要です。`
-          : `予約 #${reservation.id} を運営側でキャンセルしました。`,
-      );
+      try {
+        const result = await apiClient.cancelReservation(reservation.id, reason);
+        await load();
+        setNotice(
+          result.refund_eligible
+            ? `予約 #${reservation.id} を運営側でキャンセルしました。返金対象です。返金処理は別途対応が必要です。`
+            : `予約 #${reservation.id} を運営側でキャンセルしました。`,
+        );
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "キャンセルに失敗しました。");
+      }
     },
     [load],
   );
@@ -92,8 +96,16 @@ export default function AdminReservationsPage() {
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="text-2xl font-bold text-slate-900">予約管理</h2>
         <p className="mt-1 text-sm text-slate-600">予約日時、利用犬、決済状況、キャンセル履歴を確認できます。</p>
-        {notice ? <p className="mt-2 text-sm font-semibold text-emerald-700">{notice}</p> : null}
-        {error ? <p className="mt-2 text-sm font-semibold text-red-600">{error}</p> : null}
+        {notice ? (
+          <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
+            {notice}
+          </div>
+        ) : null}
+        {error ? (
+          <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">
+            {error}
+          </div>
+        ) : null}
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

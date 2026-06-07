@@ -73,7 +73,7 @@ export function AdminSidebar() {
               <Shield className="h-6 w-6 text-[#ffd100]" />
               <div>
                 <p className="text-xs tracking-[0.12em] text-blue-200">DOGRUN ADMIN</p>
-                <h1 className="text-base font-bold">里山ドッグラン管理</h1>
+                <h1 className="text-base font-bold">FC今治 ドッグラン管理</h1>
               </div>
             </div>
           </div>

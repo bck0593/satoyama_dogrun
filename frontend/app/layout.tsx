@@ -5,7 +5,7 @@ import Providers from "./providers";
 
 export const metadata: Metadata = {
   title: "FC今治 ドッグラン",
-  description: "里山ドッグラン 会員・予約・チェックイン",
+  description: "FC今治 里山ドッグラン 会員・予約・チェックイン",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
