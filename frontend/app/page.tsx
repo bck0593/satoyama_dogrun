@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { CalendarCheck2, ChevronRight, Clock3 } from "lucide-react";
+import { CalendarCheck2, ChevronRight, Clock3, User } from "lucide-react";
 import { useMemo } from "react";
 
 import { HomeHeroSlider } from "@/src/components/home-hero-slider";
@@ -103,6 +103,29 @@ export default function TopPage() {
 
   return (
     <MobilePage>
+      {/* ヘッダー */}
+      <header className="sticky top-0 z-30 border-b border-[#d3e0f0] bg-white shadow-sm">
+        <div className="flex h-14 items-center justify-between px-4">
+          <Image
+            src="/imabarione.png"
+            alt="imabari one"
+            width={180}
+            height={48}
+            className="h-10 w-auto max-w-[180px] object-contain"
+            priority
+          />
+          <div className="flex items-center gap-1">
+            <Link
+              href="/mypage"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-[#0b2d5f] transition hover:bg-[#eef3f9]"
+              aria-label="マイページ"
+            >
+              <User className="h-5 w-5" />
+            </Link>
+          </div>
+        </div>
+      </header>
+
       <div className="space-y-4 px-4 pb-7 pt-4">
         <HomeHeroSlider />
 
