@@ -169,7 +169,15 @@ export default function CheckinPage() {
             </button>
 
             <div className="mt-3 overflow-hidden rounded-2xl border border-gray-200 bg-black">
-              <video ref={videoRef} className="h-60 w-full object-cover" muted playsInline />
+              {cameraReady ? (
+                <video ref={videoRef} className="h-60 w-full object-cover" muted playsInline />
+              ) : (
+                <div className="flex h-60 w-full flex-col items-center justify-center gap-2 text-gray-500">
+                  <Camera className="h-8 w-8 opacity-40" />
+                  <p className="text-sm">カメラを起動してください</p>
+                  <video ref={videoRef} className="hidden" muted playsInline />
+                </div>
+              )}
             </div>
 
             <p className="mt-2 text-sm text-gray-600">

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, Dog as DogIcon, ShieldAlert, UserCircle2 } from "lucide-react";
+import { Dog as DogIcon, ShieldAlert, UserCircle2 } from "lucide-react";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 import { AuthGuard } from "@/src/components/auth-guard";
@@ -13,7 +13,7 @@ import { useAuth } from "@/src/contexts/auth-context";
 import { apiClient } from "@/src/lib/api";
 import { todayDateString } from "@/src/lib/date-utils";
 import { DOG_GENDER_OPTIONS, DOG_SIZE_OPTIONS, type DogGender, type DogSizeCategory } from "@/src/lib/dog-form";
-import { getPrimaryAction, isProfileComplete, isSuspended, summarizeDogs } from "@/src/lib/member-readiness";
+import { isSuspended } from "@/src/lib/member-readiness";
 import {
   canCancelReservation,
   CANCELLATION_ROLE_LABEL,
@@ -423,17 +423,7 @@ export default function MyPage() {
       highlightedPayment ? sortedPayments.filter((payment) => payment.id !== highlightedPayment.id) : sortedPayments,
     [highlightedPayment, sortedPayments],
   );
-  const profileReady = useMemo(() => isProfileComplete(user), [user]);
   const suspended = useMemo(() => isSuspended(user), [user]);
-  const dogSummary = useMemo(() => summarizeDogs(dogs), [dogs]);
-  const primaryAction = useMemo(() => getPrimaryAction({ user, dogs, reservations }), [dogs, reservations, user]);
-  const primaryActionHref = useMemo(() => {
-    if (primaryAction.href !== "/mypage") return primaryAction.href;
-    if (!profileReady) return "#profile-section";
-    if (!dogSummary.approvedDogs.length) return "#dogs-section";
-    return "#history-section";
-  }, [dogSummary.approvedDogs.length, primaryAction.href, profileReady]);
-
   const isSetup = useMemo(() => Boolean(user && (!user.display_name || !user.phone_number)), [user]);
 
   const saveProfile = async (event: FormEvent) => {
@@ -526,13 +516,17 @@ export default function MyPage() {
     async (reservation: Reservation, reason: string) => {
       setError(null);
       setNotice(null);
-      const result = await apiClient.cancelReservation(reservation.id, reason);
-      await load();
-      setNotice(
-        result.refund_eligible
-          ? `予約 #${reservation.id} をキャンセルしました。返金対象です。返金処理は運営確認後に行われます。`
-          : `予約 #${reservation.id} をキャンセルしました。`,
-      );
+      try {
+        const result = await apiClient.cancelReservation(reservation.id, reason);
+        await load();
+        setNotice(
+          result.refund_eligible
+            ? `予約 #${reservation.id} をキャンセルしました。返金対象です。返金処理は運営確認後に行われます。`
+            : `予約 #${reservation.id} をキャンセルしました。`,
+        );
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "キャンセルに失敗しました。");
+      }
     },
     [load],
   );
@@ -550,40 +544,6 @@ export default function MyPage() {
           ) : null}
           {notice ? <p className="text-sm text-emerald-700">{notice}</p> : null}
 
-          {false ? <section className="brand-card p-5">
-            <div className="flex flex-wrap items-center gap-2">
-              <StatusPill tone={profileReady ? "success" : "warning"}>
-                {profileReady ? "プロフィール入力済み" : "プロフィール要確認"}
-              </StatusPill>
-              <StatusPill tone={dogSummary.approvedDogs.length ? "success" : "warning"}>
-                予約できる犬 {dogSummary.approvedDogs.length}頭
-              </StatusPill>
-              {suspended ? <StatusPill tone="danger">利用停止中</StatusPill> : null}
-            </div>
-            <h2 className="mt-3 text-xl font-black text-[#143a71]">マイページで、準備状況と次の行動をまとめて確認できます。</h2>
-            <p className="mt-2 text-sm leading-6 text-[#587196]">{primaryAction.description}</p>
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              <div className="rounded-2xl bg-[#f8fbff] px-3 py-3">
-                <p className="text-xs font-semibold text-[#5a7398]">登録犬</p>
-                <p className="mt-1 text-2xl font-black text-[#123d77]">{dogSummary.activeDogs.length}</p>
-              </div>
-              <div className="rounded-2xl bg-[#f7fbf6] px-3 py-3">
-                <p className="text-xs font-semibold text-[#5c7a63]">予約可能</p>
-                <p className="mt-1 text-2xl font-black text-emerald-700">{dogSummary.approvedDogs.length}</p>
-              </div>
-              <div className="rounded-2xl bg-[#fff9ec] px-3 py-3">
-                <p className="text-xs font-semibold text-[#8d6f34]">承認待ち</p>
-                <p className="mt-1 text-2xl font-black text-amber-700">{dogSummary.pendingDogs.length}</p>
-              </div>
-            </div>
-            <Link
-              href={primaryActionHref}
-              className="mt-4 inline-flex w-full items-center justify-center rounded-2xl bg-[#0a438d] px-4 py-3 text-sm font-bold text-white"
-            >
-              {primaryAction.label}
-              <ChevronRight className="ml-1 h-4 w-4" />
-            </Link>
-          </section> : null}
 
           {suspended ? (
             <section className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
@@ -782,170 +742,6 @@ export default function MyPage() {
             </div>
           </section>
 
-          {/*
-            <div className="mb-2 flex items-center gap-2">
-              <UserCircle2 className="h-4 w-4 text-[#0a438d]" />
-              <h2 className="text-base font-bold text-gray-900">利用・利用履歴</h2>
-            </div>
-            <div className="space-y-2 text-sm">
-              {highlightedReservation ? (
-                <HighlightedReservationTable reservation={highlightedReservation} onCancel={cancelReservation} />
-              [legacy hidden]
-              {remainingHistoryReservations.length ? (
-                <div className="space-y-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowPastReservations((prev) => !prev)}
-                    className="w-full rounded-xl border border-[#c9d8ec] bg-white px-4 py-3 text-sm font-semibold text-[#11417f]"
-                  >
-                    {showPastReservations
-                      ? `過去の利用履歴を閉じる (${remainingHistoryReservations.length}件)`
-                      : `過去の利用履歴を参照する (${remainingHistoryReservations.length}件)`}
-                  </button>
-                  {showPastReservations ? (
-                    <div className="rounded-xl border border-gray-200 bg-white p-3">
-                      <div className="space-y-2">
-                        {remainingHistoryReservations.map((reservation) => (
-                          <ReservationHistoryCard
-                            key={reservation.id}
-                            reservation={reservation}
-                            onCancel={cancelReservation}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              [legacy hidden]
-              {remainingPayments.length ? (
-                <div className="space-y-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowPastPayments((prev) => !prev)}
-                    className="w-full rounded-xl border border-[#c9d8ec] bg-white px-4 py-3 text-sm font-semibold text-[#11417f]"
-                  >
-                    {showPastPayments
-                      ? `過去の支払い履歴を閉じる (${remainingPayments.length}件)`
-                      : `過去の支払い履歴を参照する (${remainingPayments.length}件)`}
-                  </button>
-                  {showPastPayments ? (
-                    <div className="rounded-xl border border-gray-200 bg-white p-3">
-                      <div className="space-y-2">
-                        {remainingPayments.map((payment) => (
-                          <div key={payment.id} className="rounded-xl border border-gray-200 bg-gray-50 p-3">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="font-semibold text-gray-900">
-                                {payment.reservation_date} {payment.reservation_start_time.slice(0, 5)}
-                              </p>
-                              <StatusPill tone={paymentStatusTone(payment.status)}>
-                                {paymentHistoryStatusLabel(payment.status)}
-                              </StatusPill>
-                            </div>
-                            <p className="mt-1 text-gray-600">記録日時: {formatDateTime(payment.created_at)}</p>
-                            <p className="text-gray-600">
-                              {Number(payment.amount).toLocaleString()} {payment.currency.toUpperCase()}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
-              {!highlightedReservation ? (
-                <div className="rounded-xl border border-dashed border-[#cad8eb] bg-[#f8fbff] p-3 text-sm text-[#587196]">
-                  次の予定はありません。新しい予約を入れると、ここに表示されます。
-                </div>
-              ) : null}
-              {/*
-                <div className="space-y-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowPastReservations((prev) => !prev)}
-                    className="w-full rounded-xl border border-[#c9d8ec] bg-white px-4 py-3 text-sm font-semibold text-[#11417f]"
-                  >
-                    残りの予約・履歴を表示 ({remainingHistoryReservations.length}件)
-                  </button>
-                  {showPastReservations ? (
-                    <div className="rounded-xl border border-gray-200 bg-white p-3">
-                      <div className="space-y-2">
-                        {remainingHistoryReservations.map((reservation) => (
-                          <ReservationHistoryCard
-                            key={reservation.id}
-                            reservation={reservation}
-                            onCancel={cancelReservation}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
-              ) : null}
-              {!sortedReservations.length ? <p className="text-sm text-gray-500">利用履歴がありません。</p> : null}
-            </div>
-          </section>
-
-          <section className="section-card">
-            <h2 className="mb-2 text-base font-bold text-gray-900">支払い履歴</h2>
-            <div className="space-y-2 text-sm">
-              {highlightedPayment ? <HighlightedPaymentTable payment={highlightedPayment} /> : null}
-              {/*
-                <div className="space-y-2">
-                  {/*
-                    残りの支払い履歴を表示 ({remainingPayments.length}件)
-                  [legacy hidden]
-                  <p className="text-sm font-semibold text-orange-600">過去の支払い履歴 ({remainingPayments.length}件)</p>
-                  <button
-                    type="button"
-                    onClick={() => setShowPastPayments((prev) => !prev)}
-                    className="w-full rounded-xl border border-[#c9d8ec] bg-white px-4 py-3 text-sm font-semibold text-[#11417f]"
-                  >
-                    {showPastPayments
-                      ? `過去の支払い履歴を閉じる (${remainingPayments.length}件)`
-                      : `過去の支払い履歴を参照する (${remainingPayments.length}件)`}
-                  </button>
-                  {showPastPayments ? (
-                    <div className="rounded-xl border border-gray-200 bg-white p-3">
-                      <div className="space-y-2">
-                    {remainingPayments.map((payment) => (
-                      <div key={payment.id} className="rounded-xl border border-gray-200 bg-gray-50 p-3">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-semibold text-gray-900">
-                            {payment.reservation_date} {payment.reservation_start_time.slice(0, 5)}
-                          </p>
-                          <StatusPill tone={paymentStatusTone(payment.status)}>
-                            {paymentHistoryStatusLabel(payment.status)}
-                          </StatusPill>
-                        </div>
-                        <p className="mt-1 text-gray-600">險倬鹸譌･譎・ {formatDateTime(payment.created_at)}</p>
-                        <p className="text-gray-600">
-                          {Number(payment.amount).toLocaleString()} {payment.currency.toUpperCase()}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-              {false ? payments.map((payment) => (
-                <div key={payment.id} className="rounded-xl border border-gray-200 bg-gray-50 p-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-semibold text-gray-900">
-                      {payment.reservation_date} {payment.reservation_start_time.slice(0, 5)}
-                    </p>
-                    <StatusPill tone={paymentStatusTone(payment.status)}>
-                      {paymentHistoryStatusLabel(payment.status)}
-                    </StatusPill>
-                  </div>
-                  <p className="mt-1 text-gray-600">記録日時: {formatDateTime(payment.created_at)}</p>
-                  <p className="text-gray-600">
-                    {Number(payment.amount).toLocaleString()} {payment.currency.toUpperCase()}
-                  </p>
-                </div>
-              )) : null}
-              {!sortedPayments.length ? <p className="text-sm text-gray-500">支払い履歴がありません。</p> : null}
-            </div>
-          </section>
-
-          */}
 
           <section id="history-section" className="section-card">
             <div className="mb-2 flex items-center gap-2">

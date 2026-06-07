@@ -141,6 +141,9 @@ export default function ReservationPage() {
     [selectedDogs, selectedSlot],
   );
   const amount = selectedDogCount * FEE_PER_DOG;
+  const partySizeIssue = selectedDogCount > 0 && partySize < selectedDogCount
+    ? `来場人数（${partySize}人）は選択した犬の頭数（${selectedDogCount}頭）以上にしてください。`
+    : null;
   const isSubmitDisabled =
     loading ||
     suspended ||
@@ -148,7 +151,8 @@ export default function ReservationPage() {
     !selectedSlot ||
     !selectedDogIds.length ||
     !selectableDogs.length ||
-    Boolean(slotCapacityIssue);
+    Boolean(slotCapacityIssue) ||
+    Boolean(partySizeIssue);
 
   useEffect(() => {
     const availableIds = new Set(selectableDogs.map((dog) => dog.id));
@@ -492,6 +496,11 @@ export default function ReservationPage() {
               </div>
             </div>
 
+            {partySizeIssue ? (
+              <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {partySizeIssue}
+              </p>
+            ) : null}
             {error || dogsError ? <p className="mt-4 text-sm text-red-600">{error || dogsError}</p> : null}
 
             {suspended ? (
