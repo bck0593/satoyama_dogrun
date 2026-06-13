@@ -49,13 +49,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
         )
         serializer.is_valid(raise_exception=True)
 
-        if reservation.status in [
-            Reservation.Status.CANCELLED,
-            Reservation.Status.COMPLETED,
-            Reservation.Status.NO_SHOW,
-            Reservation.Status.CHECKED_IN,
-            Reservation.Status.EXPIRED,
-        ]:
+        if reservation.status in [*Reservation.terminal_statuses(), Reservation.Status.CHECKED_IN]:
             return Response({"detail": "この予約はキャンセルできません。"}, status=status.HTTP_400_BAD_REQUEST)
 
         rule = FacilityRule.get_current()

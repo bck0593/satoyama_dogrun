@@ -8,6 +8,7 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from apps.checkins.models import CheckinLog
+from apps.common.time_utils import elapsed_minutes
 from apps.dogs.models import Dog
 from apps.reservations.models import FacilityRule, NoShowRecord, Reservation, ReservationDog
 from apps.reservations.services import resolve_slot_window
@@ -94,10 +95,7 @@ class ReservationSerializer(serializers.ModelSerializer):
             return None
         if checkout_log.duration_minutes is not None:
             return checkout_log.duration_minutes
-        if reservation.checked_in_at:
-            elapsed = checkout_log.scanned_at - reservation.checked_in_at
-            return max(int(elapsed.total_seconds() // 60), 0)
-        return None
+        return elapsed_minutes(reservation.checked_in_at, checkout_log.scanned_at)
 
     def get_cancelled_by_display_name(self, reservation: Reservation):
         if not reservation.cancelled_by:

@@ -1,7 +1,10 @@
-﻿import { todayDateString } from "@/src/lib/date-utils";
+﻿import type { StatusTone } from "@/src/components/status-pill";
+import type { Dog } from "@/src/lib/types";
+import { todayDateString } from "@/src/lib/date-utils";
 
 export type DogSizeCategory = "small" | "medium" | "large";
 export type DogGender = "male" | "female" | "unknown";
+export type VaccineApprovalStatus = Dog["vaccine_approval_status"];
 
 export type DogFormInput = {
   name: string;
@@ -26,6 +29,25 @@ export const DOG_GENDER_OPTIONS: Array<{ value: DogGender; label: string }> = [
   { value: "male", label: "オス" },
   { value: "female", label: "メス" },
 ];
+
+export function sizeCategoryLabel(value: DogSizeCategory | string): string {
+  if (value === "small") return "小型犬";
+  if (value === "medium") return "中型犬";
+  if (value === "large") return "大型犬";
+  return value;
+}
+
+export function vaccineStatusLabel(status: VaccineApprovalStatus): string {
+  if (status === "approved") return "承認済み";
+  if (status === "rejected") return "差し戻し";
+  return "確認待ち";
+}
+
+export function vaccineStatusTone(status: VaccineApprovalStatus): StatusTone {
+  if (status === "approved") return "success";
+  if (status === "rejected") return "danger";
+  return "warning";
+}
 
 export const INITIAL_DOG_FORM: DogFormInput = {
   name: "",

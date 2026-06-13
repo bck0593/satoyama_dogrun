@@ -68,5 +68,4 @@ pnpm dev
 
 ## 備考
 
-- フロント旧構成は `frontend/app_legacy` に退避しています。
 - LINEログインは `LINE_LOGIN_MOCK` で開発モードを切替可能です。

@@ -43,8 +43,6 @@
     ".next-dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    "app_legacy",
-    "tmp"
+    "node_modules"
   ]
 }

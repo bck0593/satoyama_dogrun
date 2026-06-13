@@ -14,15 +14,30 @@ from apps.checkins.serializers import (
     CheckoutSerializer,
     QrCheckinSerializer,
 )
+from apps.common.time_utils import elapsed_minutes
 from apps.reservations.models import FacilityRule, Reservation
 from apps.reservations.services import reconcile_reservation_statuses
 
 
-def _calculate_duration_minutes(reservation: Reservation, checked_out_at) -> int | None:
-    if not reservation.checked_in_at:
-        return None
-    elapsed = checked_out_at - reservation.checked_in_at
-    return max(int(elapsed.total_seconds() // 60), 0)
+def _build_entries_for_reservation(reservation: Reservation, *, checked_in_at, checked_out_at, status, source, metadata):
+    """Build (unsaved) Entry rows snapshotting each dog on a reservation."""
+    return [
+        Entry(
+            reservation=reservation,
+            user=reservation.user,
+            dog_id=link.dog_id,
+            dog_name_snapshot=link.dog_name,
+            breed_snapshot=link.breed,
+            size_category_snapshot=link.size_category,
+            weight_kg_snapshot=link.weight_kg,
+            checked_in_at=checked_in_at,
+            checked_out_at=checked_out_at,
+            status=status,
+            source=source,
+            metadata=metadata,
+        )
+        for link in reservation.reservation_dogs.all()
+    ]
 
 
 def _build_checkin_window(reservation: Reservation, rule: FacilityRule):
@@ -217,23 +232,14 @@ class QrCheckinView(APIView):
                 metadata={"scanned_by": request.user.id},
             )
 
-            entries = []
-            for link in reservation.reservation_dogs.all():
-                entries.append(
-                    Entry(
-                        reservation=reservation,
-                        user=reservation.user,
-                        dog_id=link.dog_id,
-                        dog_name_snapshot=link.dog_name,
-                        breed_snapshot=link.breed,
-                        size_category_snapshot=link.size_category,
-                        weight_kg_snapshot=link.weight_kg,
-                        checked_in_at=now,
-                        status=Entry.Status.IN,
-                        source="qr",
-                        metadata={"checkin_log_id": checkin_log.id},
-                    )
-                )
+            entries = _build_entries_for_reservation(
+                reservation,
+                checked_in_at=now,
+                checked_out_at=None,
+                status=Entry.Status.IN,
+                source="qr",
+                metadata={"checkin_log_id": checkin_log.id},
+            )
             if entries:
                 Entry.objects.bulk_create(entries)
 
@@ -267,7 +273,7 @@ class CheckoutView(APIView):
                 return Response({"detail": "チェックアウト可能な状態ではありません。"}, status=status.HTTP_400_BAD_REQUEST)
 
             checked_out_at = timezone.now()
-            duration_minutes = _calculate_duration_minutes(reservation, checked_out_at)
+            duration_minutes = elapsed_minutes(reservation.checked_in_at, checked_out_at)
 
             reservation.status = Reservation.Status.COMPLETED
             reservation.save(update_fields=["status", "updated_at"])
@@ -293,23 +299,14 @@ class CheckoutView(APIView):
             )
 
             if updated_count == 0:
-                backfill_entries = [
-                    Entry(
-                        reservation=reservation,
-                        user=reservation.user,
-                        dog_id=link.dog_id,
-                        dog_name_snapshot=link.dog_name,
-                        breed_snapshot=link.breed,
-                        size_category_snapshot=link.size_category,
-                        weight_kg_snapshot=link.weight_kg,
-                        checked_in_at=reservation.checked_in_at or checked_out_at,
-                        checked_out_at=checked_out_at,
-                        status=Entry.Status.OUT,
-                        source="admin",
-                        metadata={"created_by": "checkout_backfill"},
-                    )
-                    for link in reservation.reservation_dogs.all()
-                ]
+                backfill_entries = _build_entries_for_reservation(
+                    reservation,
+                    checked_in_at=reservation.checked_in_at or checked_out_at,
+                    checked_out_at=checked_out_at,
+                    status=Entry.Status.OUT,
+                    source="admin",
+                    metadata={"created_by": "checkout_backfill"},
+                )
                 if backfill_entries:
                     Entry.objects.bulk_create(backfill_entries)
 

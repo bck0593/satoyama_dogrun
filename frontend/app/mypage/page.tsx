@@ -5,329 +5,32 @@ import { Dog as DogIcon, ShieldAlert, UserCircle2 } from "lucide-react";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 import { AuthGuard } from "@/src/components/auth-guard";
+import { DogEditForm } from "@/src/components/dog-edit-form";
 import { MobilePage } from "@/src/components/mobile-page";
 import { PageHeader } from "@/src/components/page-header";
-import { ReservationCancelDialog } from "@/src/components/reservation-cancel-dialog";
 import { StatusPill } from "@/src/components/status-pill";
 import { useAuth } from "@/src/contexts/auth-context";
 import { apiClient } from "@/src/lib/api";
-import { todayDateString } from "@/src/lib/date-utils";
-import { DOG_GENDER_OPTIONS, DOG_SIZE_OPTIONS, type DogGender, type DogSizeCategory } from "@/src/lib/dog-form";
+import { formatDateTimeJa, todayDateString } from "@/src/lib/date-utils";
+import {
+  sizeCategoryLabel,
+  vaccineStatusLabel,
+  vaccineStatusTone,
+  type DogGender,
+  type DogSizeCategory,
+} from "@/src/lib/dog-form";
 import { isSuspended } from "@/src/lib/member-readiness";
 import {
-  canCancelReservation,
-  CANCELLATION_ROLE_LABEL,
-  formatReservationDate,
   getReservationEndValue,
-  PAYMENT_STATUS_LABEL,
-  RESERVATION_STATUS_LABEL,
+  paymentHistoryStatusLabel,
+  paymentStatusTone,
   toDateTimeValue,
 } from "@/src/lib/reservation-display";
 import type { Dog, PaymentHistoryItem, Reservation } from "@/src/lib/types";
 
-function formatDateTime(value: string | null) {
-  if (!value) return "未記録";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "未記録";
-  return date.toLocaleString("ja-JP", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function formatTime(value: string | null | undefined) {
-  if (!value) return "--:--";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "--:--";
-  return date.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
-}
-
-function deriveUsageMinutes(startAt: string | null, endAt: string | null | undefined, fallbackMinutes?: number | null) {
-  if (typeof fallbackMinutes === "number") return fallbackMinutes;
-  if (!startAt || !endAt) return null;
-  const start = new Date(startAt);
-  const end = new Date(endAt);
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null;
-  return Math.max(Math.floor((end.getTime() - start.getTime()) / 60000), 0);
-}
-
-function vaccineStatusLabel(status: Dog["vaccine_approval_status"]) {
-  if (status === "approved") return "承認済み";
-  if (status === "rejected") return "差し戻し";
-  return "確認待ち";
-}
-
-function vaccineStatusTone(status: Dog["vaccine_approval_status"]) {
-  if (status === "approved") return "success" as const;
-  if (status === "rejected") return "danger" as const;
-  return "warning" as const;
-}
-
-function reservationStatusTone(status: string) {
-  switch (status) {
-    case "confirmed":
-    case "checked_in":
-      return "success" as const;
-    case "pending_payment":
-      return "warning" as const;
-    case "cancelled":
-    case "no_show":
-      return "danger" as const;
-    default:
-      return "neutral" as const;
-  }
-}
-
-function paymentStatusTone(status: string) {
-  switch (status) {
-    case "created":
-      return "neutral" as const;
-    case "paid":
-      return "success" as const;
-    case "unpaid":
-      return "warning" as const;
-    case "failed":
-      return "danger" as const;
-    default:
-      return "neutral" as const;
-  }
-}
-
-function paymentHistoryStatusLabel(status: PaymentHistoryItem["status"]) {
-  switch (status) {
-    case "created":
-      return "作成済み";
-    case "paid":
-      return "決済済み";
-    case "failed":
-      return "決済失敗";
-    case "refunded":
-      return "返金済み";
-    default:
-      return status;
-  }
-}
-
-function ReservationHistoryCard({
-  reservation,
-  onCancel,
-}: {
-  reservation: Reservation;
-  onCancel: (reservation: Reservation, reason: string) => Promise<void>;
-}) {
-  const usageMinutes = deriveUsageMinutes(
-    reservation.checked_in_at,
-    reservation.actual_checked_out_at,
-    reservation.actual_duration_minutes,
-  );
-  const cancellationRoleLabel = reservation.cancelled_by_role
-    ? CANCELLATION_ROLE_LABEL[reservation.cancelled_by_role] || reservation.cancelled_by_role
-    : null;
-  const cancelledByLabel =
-    reservation.cancelled_by_role === "user"
-      ? "本人"
-      : reservation.cancelled_by_display_name || cancellationRoleLabel || "運営";
-
-  return (
-    <div className="rounded-2xl border border-gray-200 bg-gray-50 p-3">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <StatusPill tone={reservationStatusTone(reservation.status)}>
-              {RESERVATION_STATUS_LABEL[reservation.status] || reservation.status}
-            </StatusPill>
-            <StatusPill tone={paymentStatusTone(reservation.payment_status)}>
-              {PAYMENT_STATUS_LABEL[reservation.payment_status] || reservation.payment_status}
-            </StatusPill>
-          </div>
-          <p className="mt-2 font-semibold text-gray-900">
-            {formatReservationDate(reservation.date)} {reservation.start_time.slice(0, 5)} -{" "}
-            {reservation.end_time.slice(0, 5)}
-          </p>
-        </div>
-        {canCancelReservation(reservation) ? (
-          <ReservationCancelDialog
-            triggerLabel="予約をキャンセル"
-            triggerClassName="shrink-0 rounded-lg border border-red-200 px-3 py-1 text-xs font-semibold text-red-600 transition hover:bg-red-50"
-            title="この予約をキャンセルしますか"
-            description="キャンセル後は元に戻せません。返金対象かどうかは予約時間と決済状況に応じて判定されます。"
-            submitLabel="キャンセルする"
-            reasonPlaceholder="体調不良、予定変更など"
-            helperText="理由は任意です。"
-            onSubmit={(reason) => onCancel(reservation, reason)}
-          />
-        ) : null}
-      </div>
-
-      {reservation.checked_in_at ? (
-        <p className="mt-2 text-gray-600">
-          実利用時間: {formatTime(reservation.checked_in_at)} -{" "}
-          {reservation.actual_checked_out_at ? formatTime(reservation.actual_checked_out_at) : "利用中"}{" "}
-          {usageMinutes !== null ? `(${usageMinutes}分)` : ""}
-        </p>
-      ) : (
-        <p className="mt-2 text-gray-600">実利用時間: 未チェックイン</p>
-      )}
-      <p className="mt-1 text-gray-600">予約日時: {formatDateTime(reservation.created_at)}</p>
-      <p className="text-gray-600">支払日時: {formatDateTime(reservation.paid_at)}</p>
-      <p className="text-gray-600">
-        利用犬:{" "}
-        {reservation.reservation_dogs.length
-          ? reservation.reservation_dogs.map((dog) => dog.dog_name).join(" / ")
-          : "未登録"}
-      </p>
-
-      {reservation.cancelled_at ? (
-        <div className="mt-2 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">
-          <p>キャンセル日時: {formatDateTime(reservation.cancelled_at)}</p>
-          <p>キャンセル者: {cancelledByLabel}</p>
-          {reservation.cancel_reason ? <p>理由: {reservation.cancel_reason}</p> : null}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function HighlightedReservationTable({
-  reservation,
-  onCancel,
-}: {
-  reservation: Reservation;
-  onCancel: (reservation: Reservation, reason: string) => Promise<void>;
-}) {
-  const usageMinutes = deriveUsageMinutes(
-    reservation.checked_in_at,
-    reservation.actual_checked_out_at,
-    reservation.actual_duration_minutes,
-  );
-
-  return (
-    <div className="rounded-2xl border border-[#cad8eb] bg-[#f8fbff] p-3">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-black text-[#15396e]">表示中の予約・履歴</p>
-          <p className="mt-1 text-sm text-[#587196]">1件だけ先頭に表示しています。</p>
-        </div>
-        {canCancelReservation(reservation) ? (
-          <ReservationCancelDialog
-            triggerLabel="予約をキャンセル"
-            triggerClassName="shrink-0 rounded-lg border border-red-200 px-3 py-1 text-xs font-semibold text-red-600 transition hover:bg-red-50"
-            title="この予約をキャンセルしますか"
-            description="キャンセル後は元に戻せません。返金対象かどうかは予約時間と決済状況に応じて判定されます。"
-            submitLabel="キャンセルする"
-            reasonPlaceholder="理由があれば入力"
-            helperText="任意入力です。"
-            onSubmit={(reason) => onCancel(reservation, reason)}
-          />
-        ) : null}
-      </div>
-
-      <div className="mt-3 overflow-hidden rounded-xl border border-white bg-white">
-        <table className="w-full text-sm">
-          <tbody>
-            <tr className="border-b border-slate-100">
-              <th className="w-24 bg-slate-50 px-3 py-2 text-left font-semibold text-slate-500">日時</th>
-              <td className="px-3 py-2 font-semibold text-slate-900">
-                {formatReservationDate(reservation.date)} {reservation.start_time.slice(0, 5)} -{" "}
-                {reservation.end_time.slice(0, 5)}
-              </td>
-            </tr>
-            <tr className="border-b border-slate-100">
-              <th className="bg-slate-50 px-3 py-2 text-left font-semibold text-slate-500">状態</th>
-              <td className="px-3 py-2">
-                <div className="flex flex-wrap gap-2">
-                  <StatusPill tone={reservationStatusTone(reservation.status)}>
-                    {RESERVATION_STATUS_LABEL[reservation.status] || reservation.status}
-                  </StatusPill>
-                  <StatusPill tone={paymentStatusTone(reservation.payment_status)}>
-                    {PAYMENT_STATUS_LABEL[reservation.payment_status] || reservation.payment_status}
-                  </StatusPill>
-                </div>
-              </td>
-            </tr>
-            <tr className="border-b border-slate-100">
-              <th className="bg-slate-50 px-3 py-2 text-left font-semibold text-slate-500">利用犬</th>
-              <td className="px-3 py-2 text-slate-700">
-                {reservation.reservation_dogs.length
-                  ? reservation.reservation_dogs.map((dog) => dog.dog_name).join(" / ")
-                  : "未登録"}
-              </td>
-            </tr>
-            <tr className="border-b border-slate-100">
-              <th className="bg-slate-50 px-3 py-2 text-left font-semibold text-slate-500">予約日時</th>
-              <td className="px-3 py-2 text-slate-700">{formatDateTime(reservation.created_at)}</td>
-            </tr>
-            <tr className="border-b border-slate-100">
-              <th className="bg-slate-50 px-3 py-2 text-left font-semibold text-slate-500">支払日時</th>
-              <td className="px-3 py-2 text-slate-700">{formatDateTime(reservation.paid_at)}</td>
-            </tr>
-            <tr>
-              <th className="bg-slate-50 px-3 py-2 text-left font-semibold text-slate-500">実利用時間</th>
-              <td className="px-3 py-2 text-slate-700">
-                {reservation.checked_in_at
-                  ? `${formatTime(reservation.checked_in_at)} - ${
-                      reservation.actual_checked_out_at ? formatTime(reservation.actual_checked_out_at) : "利用中"
-                    }${usageMinutes !== null ? ` (${usageMinutes}分)` : ""}`
-                  : "未チェックイン"}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-function HighlightedPaymentTable({ payment }: { payment: PaymentHistoryItem }) {
-  return (
-    <div className="rounded-2xl border border-[#cad8eb] bg-[#f8fbff] p-3">
-      <div>
-        <p className="text-sm font-black text-[#15396e]">表示中の支払い履歴</p>
-        <p className="mt-1 text-sm text-[#587196]">1件だけ先頭に表示しています。</p>
-      </div>
-
-      <div className="mt-3 overflow-hidden rounded-xl border border-white bg-white">
-        <table className="w-full text-sm">
-          <tbody>
-            <tr className="border-b border-slate-100">
-              <th className="w-24 bg-slate-50 px-3 py-2 text-left font-semibold text-slate-500">利用日時</th>
-              <td className="px-3 py-2 font-semibold text-slate-900">
-                {payment.reservation_date} {payment.reservation_start_time.slice(0, 5)}
-              </td>
-            </tr>
-            <tr className="border-b border-slate-100">
-              <th className="bg-slate-50 px-3 py-2 text-left font-semibold text-slate-500">支払い状態</th>
-              <td className="px-3 py-2">
-                <StatusPill tone={paymentStatusTone(payment.status)}>
-                  {paymentHistoryStatusLabel(payment.status)}
-                </StatusPill>
-              </td>
-            </tr>
-            <tr className="border-b border-slate-100">
-              <th className="bg-slate-50 px-3 py-2 text-left font-semibold text-slate-500">金額</th>
-              <td className="px-3 py-2 text-slate-700">
-                {Number(payment.amount).toLocaleString()} {payment.currency.toUpperCase()}
-              </td>
-            </tr>
-            <tr className="border-b border-slate-100">
-              <th className="bg-slate-50 px-3 py-2 text-left font-semibold text-slate-500">返金額</th>
-              <td className="px-3 py-2 text-slate-700">
-                {Number(payment.refunded_amount).toLocaleString()} {payment.currency.toUpperCase()}
-              </td>
-            </tr>
-            <tr>
-              <th className="bg-slate-50 px-3 py-2 text-left font-semibold text-slate-500">記録日時</th>
-              <td className="px-3 py-2 text-slate-700">{formatDateTime(payment.created_at)}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
+import { HighlightedPaymentTable } from "./_components/highlighted-payment-table";
+import { HighlightedReservationTable } from "./_components/highlighted-reservation-table";
+import { ReservationHistoryCard } from "./_components/reservation-history-card";
 
 export default function MyPage() {
   const { user, refreshProfile } = useAuth();
@@ -620,7 +323,7 @@ export default function MyPage() {
                       <div className="mt-1 flex flex-wrap gap-2">
                         <StatusPill tone="neutral">
                           <DogIcon className="mr-1 h-3 w-3" />
-                          {dog.size_category === "small" ? "小型犬" : dog.size_category === "medium" ? "中型犬" : "大型犬"}
+                          {sizeCategoryLabel(dog.size_category)}
                         </StatusPill>
                         <StatusPill tone={vaccineStatusTone(dog.vaccine_approval_status)}>
                           ワクチン確認: {vaccineStatusLabel(dog.vaccine_approval_status)}
@@ -689,133 +392,15 @@ export default function MyPage() {
                   ) : null}
 
                   {editingDogId === dog.id ? (
-                    <div className="mt-3 space-y-3 rounded-xl border border-orange-200 bg-orange-50 p-3">
-                      <p className="text-xs font-bold text-orange-800">犬情報を編集</p>
-                      <label className="block text-xs font-semibold text-gray-600">
-                        名前
-                        <input
-                          className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-                          value={editingForm.name ?? ""}
-                          onChange={(event) => setEditingForm((prev) => ({ ...prev, name: event.target.value }))}
-                        />
-                      </label>
-                      <label className="block text-xs font-semibold text-gray-600">
-                        犬種
-                        <input
-                          className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-                          value={editingForm.breed ?? ""}
-                          onChange={(event) => setEditingForm((prev) => ({ ...prev, breed: event.target.value }))}
-                        />
-                      </label>
-                      <label className="block text-xs font-semibold text-gray-600">
-                        犬種グループ（任意）
-                        <input
-                          className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-                          placeholder="例: 牧羊犬"
-                          value={(editingForm.breed_group as string | undefined) ?? ""}
-                          onChange={(event) => setEditingForm((prev) => ({ ...prev, breed_group: event.target.value }))}
-                        />
-                      </label>
-                      <label className="block text-xs font-semibold text-gray-600">
-                        体重（kg）
-                        <input
-                          type="number"
-                          min={0.1}
-                          step={0.1}
-                          className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-                          value={editingForm.weight_kg ?? ""}
-                          onChange={(event) => setEditingForm((prev) => ({ ...prev, weight_kg: event.target.value }))}
-                        />
-                      </label>
-                      <label className="block text-xs font-semibold text-gray-600">
-                        生年月日
-                        <input
-                          type="date"
-                          className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-                          max={today}
-                          value={editingForm.birth_date ?? ""}
-                          onChange={(event) => setEditingForm((prev) => ({ ...prev, birth_date: event.target.value }))}
-                        />
-                      </label>
-                      <label className="block text-xs font-semibold text-gray-600">
-                        性別
-                        <select
-                          className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-                          value={(editingForm.gender as string | undefined) ?? "unknown"}
-                          onChange={(event) => setEditingForm((prev) => ({ ...prev, gender: event.target.value as DogGender }))}
-                        >
-                          {DOG_GENDER_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <label className="block text-xs font-semibold text-gray-600">
-                        サイズ
-                        <select
-                          className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-                          value={(editingForm.size_category as string | undefined) ?? "small"}
-                          onChange={(event) =>
-                            setEditingForm((prev) => ({ ...prev, size_category: event.target.value as DogSizeCategory }))
-                          }
-                        >
-                          {DOG_SIZE_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <label className="block text-xs font-semibold text-gray-600">
-                        ワクチン期限
-                        <input
-                          type="date"
-                          className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-                          min={today}
-                          value={editingForm.vaccine_expires_on ?? ""}
-                          onChange={(event) => setEditingForm((prev) => ({ ...prev, vaccine_expires_on: event.target.value }))}
-                        />
-                      </label>
-                      <label className="block text-xs font-semibold text-gray-600">
-                        ワクチン証明画像
-                        <input
-                          type="file"
-                          accept="image/png,image/jpeg,image/webp"
-                          className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-                          onChange={(event) => setEditingFile(event.target.files?.[0] ?? null)}
-                        />
-                      </label>
-                      <label className="block text-xs font-semibold text-gray-600">
-                        備考
-                        <textarea
-                          className="mt-1 h-20 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-                          placeholder="特記事項など"
-                          value={(editingForm.notes as string | undefined) ?? ""}
-                          onChange={(event) => setEditingForm((prev) => ({ ...prev, notes: event.target.value }))}
-                        />
-                      </label>
-                      <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                        ワクチン証明画像またはワクチン期限を更新すると、再度スタッフ承認待ちになります。
-                      </p>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          disabled={saving}
-                          onClick={saveDog}
-                          className="flex-1 rounded-lg bg-orange-500 px-3 py-2.5 text-sm font-bold text-white disabled:opacity-60"
-                        >
-                          {saving ? "保存中..." : "保存する"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setEditingDogId(null)}
-                          className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-semibold text-gray-700"
-                        >
-                          キャンセル
-                        </button>
-                      </div>
-                    </div>
+                    <DogEditForm
+                      form={editingForm}
+                      today={today}
+                      saving={saving}
+                      onChange={(patch) => setEditingForm((prev) => ({ ...prev, ...patch }))}
+                      onFileChange={setEditingFile}
+                      onSave={saveDog}
+                      onCancel={() => setEditingDogId(null)}
+                    />
                   ) : null}
                 </div>
               ))}
@@ -906,7 +491,7 @@ export default function MyPage() {
                                 {paymentHistoryStatusLabel(payment.status)}
                               </StatusPill>
                             </div>
-                            <p className="mt-1 text-gray-600">記録日時: {formatDateTime(payment.created_at)}</p>
+                            <p className="mt-1 text-gray-600">記録日時: {formatDateTimeJa(payment.created_at, "未記録")}</p>
                             <p className="text-gray-600">
                               {Number(payment.amount).toLocaleString()} {payment.currency.toUpperCase()}
                             </p>

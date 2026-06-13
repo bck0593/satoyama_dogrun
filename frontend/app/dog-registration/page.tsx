@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { AuthGuard } from "@/src/components/auth-guard";
+import { DogEditForm } from "@/src/components/dog-edit-form";
 import { MobilePage } from "@/src/components/mobile-page";
 import { PageHeader } from "@/src/components/page-header";
 import { useDogs } from "@/src/hooks/use-dogs";
@@ -251,126 +252,15 @@ export default function DogRegistrationPage() {
 
                   {/* 編集フォーム */}
                   {editingDogId === dog.id ? (
-                    <div className="mt-3 space-y-3 rounded-xl border border-orange-200 bg-orange-50 p-3">
-                      <p className="text-xs font-bold text-orange-800">犬情報を編集</p>
-                      <label className="block text-xs font-semibold text-gray-600">
-                        名前
-                        <input
-                          className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-                          value={editingForm.name ?? ""}
-                          onChange={(e) => setEditingForm((prev) => ({ ...prev, name: e.target.value }))}
-                        />
-                      </label>
-                      <label className="block text-xs font-semibold text-gray-600">
-                        犬種
-                        <input
-                          className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-                          value={editingForm.breed ?? ""}
-                          onChange={(e) => setEditingForm((prev) => ({ ...prev, breed: e.target.value }))}
-                        />
-                      </label>
-                      <label className="block text-xs font-semibold text-gray-600">
-                        犬種グループ（任意）
-                        <input
-                          className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-                          value={(editingForm.breed_group as string | undefined) ?? ""}
-                          onChange={(e) => setEditingForm((prev) => ({ ...prev, breed_group: e.target.value }))}
-                        />
-                      </label>
-                      <label className="block text-xs font-semibold text-gray-600">
-                        体重（kg）
-                        <input
-                          type="number"
-                          min={0.1}
-                          step={0.1}
-                          className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-                          value={editingForm.weight_kg ?? ""}
-                          onChange={(e) => setEditingForm((prev) => ({ ...prev, weight_kg: e.target.value }))}
-                        />
-                      </label>
-                      <label className="block text-xs font-semibold text-gray-600">
-                        生年月日
-                        <input
-                          type="date"
-                          className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-                          max={today}
-                          value={editingForm.birth_date ?? ""}
-                          onChange={(e) => setEditingForm((prev) => ({ ...prev, birth_date: e.target.value }))}
-                        />
-                      </label>
-                      <label className="block text-xs font-semibold text-gray-600">
-                        性別
-                        <select
-                          className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-                          value={(editingForm.gender as string | undefined) ?? "unknown"}
-                          onChange={(e) => setEditingForm((prev) => ({ ...prev, gender: e.target.value as DogGender }))}
-                        >
-                          {DOG_GENDER_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>{option.label}</option>
-                          ))}
-                        </select>
-                      </label>
-                      <label className="block text-xs font-semibold text-gray-600">
-                        サイズ
-                        <select
-                          className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-                          value={(editingForm.size_category as string | undefined) ?? "small"}
-                          onChange={(e) => setEditingForm((prev) => ({ ...prev, size_category: e.target.value as DogSizeCategory }))}
-                        >
-                          {DOG_SIZE_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>{option.label}</option>
-                          ))}
-                        </select>
-                      </label>
-                      <label className="block text-xs font-semibold text-gray-600">
-                        ワクチン期限
-                        <input
-                          type="date"
-                          className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-                          min={today}
-                          value={editingForm.vaccine_expires_on ?? ""}
-                          onChange={(e) => setEditingForm((prev) => ({ ...prev, vaccine_expires_on: e.target.value }))}
-                        />
-                      </label>
-                      <label className="block text-xs font-semibold text-gray-600">
-                        ワクチン証明画像
-                        <input
-                          type="file"
-                          accept="image/png,image/jpeg,image/webp"
-                          className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-                          onChange={(e) => setEditingFile(e.target.files?.[0] ?? null)}
-                        />
-                      </label>
-                      <label className="block text-xs font-semibold text-gray-600">
-                        備考
-                        <textarea
-                          className="mt-1 h-20 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-                          placeholder="特記事項など"
-                          value={(editingForm.notes as string | undefined) ?? ""}
-                          onChange={(e) => setEditingForm((prev) => ({ ...prev, notes: e.target.value }))}
-                        />
-                      </label>
-                      <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                        ワクチン証明画像またはワクチン期限を更新すると、再度スタッフ承認待ちになります。
-                      </p>
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          disabled={saving}
-                          onClick={saveDog}
-                          className="flex-1 rounded-lg bg-orange-500 px-3 py-2.5 text-sm font-bold text-white disabled:opacity-60"
-                        >
-                          {saving ? "保存中..." : "保存する"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setEditingDogId(null)}
-                          className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm font-semibold text-gray-700"
-                        >
-                          キャンセル
-                        </button>
-                      </div>
-                    </div>
+                    <DogEditForm
+                      form={editingForm}
+                      today={today}
+                      saving={saving}
+                      onChange={(patch) => setEditingForm((prev) => ({ ...prev, ...patch }))}
+                      onFileChange={setEditingFile}
+                      onSave={saveDog}
+                      onCancel={() => setEditingDogId(null)}
+                    />
                   ) : null}
                 </div>
               ))}
@@ -385,6 +275,7 @@ export default function DogRegistrationPage() {
               <input
                 className="w-full rounded-xl border border-gray-300 px-3 py-2"
                 placeholder="名前"
+                aria-label="名前"
                 value={form.name}
                 onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
                 required
@@ -392,6 +283,7 @@ export default function DogRegistrationPage() {
               <input
                 className="w-full rounded-xl border border-gray-300 px-3 py-2"
                 placeholder="犬種"
+                aria-label="犬種"
                 list="dog-breed-suggestions"
                 value={form.breed}
                 onChange={(event) => setForm((prev) => ({ ...prev, breed: event.target.value }))}
@@ -406,6 +298,7 @@ export default function DogRegistrationPage() {
               <input
                 className="w-full rounded-xl border border-gray-300 px-3 py-2"
                 placeholder="犬種グループ (任意)"
+                aria-label="犬種グループ（任意）"
                 value={form.breed_group}
                 onChange={(event) => setForm((prev) => ({ ...prev, breed_group: event.target.value }))}
               />
@@ -415,6 +308,7 @@ export default function DogRegistrationPage() {
                 step={0.1}
                 className="w-full rounded-xl border border-gray-300 px-3 py-2"
                 placeholder="体重(kg)"
+                aria-label="体重（kg）"
                 value={form.weight_kg}
                 onChange={(event) => setForm((prev) => ({ ...prev, weight_kg: event.target.value }))}
                 required
@@ -433,6 +327,7 @@ export default function DogRegistrationPage() {
 
               <select
                 className="w-full rounded-xl border border-gray-300 px-3 py-2"
+                aria-label="性別"
                 value={form.gender}
                 onChange={(event) => setForm((prev) => ({ ...prev, gender: event.target.value as DogGender }))}
               >
@@ -445,6 +340,7 @@ export default function DogRegistrationPage() {
 
               <select
                 className="w-full rounded-xl border border-gray-300 px-3 py-2"
+                aria-label="サイズ"
                 value={form.size_category}
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, size_category: event.target.value as DogSizeCategory }))
@@ -483,6 +379,7 @@ export default function DogRegistrationPage() {
               <textarea
                 className="h-24 w-full rounded-xl border border-gray-300 px-3 py-2"
                 placeholder="備考"
+                aria-label="備考"
                 value={form.notes}
                 onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))}
               />

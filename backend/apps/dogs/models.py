@@ -1,4 +1,5 @@
 ﻿from datetime import date
+from decimal import Decimal
 
 from django.conf import settings
 from django.core.validators import MinValueValidator
@@ -42,7 +43,7 @@ class Dog(models.Model):
     breed_raw = models.CharField(max_length=120)
     breed_normalized = models.CharField(max_length=120, db_index=True)
     breed_group = models.CharField(max_length=50, null=True, blank=True)
-    weight_kg = models.DecimalField(max_digits=5, decimal_places=2, validators=[MinValueValidator(0.1)])
+    weight_kg = models.DecimalField(max_digits=5, decimal_places=2, validators=[MinValueValidator(Decimal("0.1"))])
     size_category = models.CharField(max_length=10, choices=SizeCategory.choices)
     gender = models.CharField(max_length=10, choices=Gender.choices, null=True, blank=True)
     birth_date = models.DateField(null=True, blank=True)

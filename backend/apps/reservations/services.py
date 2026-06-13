@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from django.db.models import Q
 from django.utils import timezone
 
+from apps.common.time_utils import elapsed_minutes
 from apps.reservations.models import FacilityRule, Reservation
 
 
@@ -51,10 +52,7 @@ def auto_checkout_checked_in_reservations(rule: FacilityRule, now=None) -> int:
     for reservation in candidates:
         slot_end = timezone.make_aware(datetime.combine(reservation.date, reservation.end_time))
         if current > slot_end + grace:
-            duration_minutes = None
-            if reservation.checked_in_at:
-                elapsed = current - reservation.checked_in_at
-                duration_minutes = max(int(elapsed.total_seconds() // 60), 0)
+            duration_minutes = elapsed_minutes(reservation.checked_in_at, current)
             reservation.status = Reservation.Status.COMPLETED
             reservation.save(update_fields=["status", "updated_at"])
             checked_out_rows.append(

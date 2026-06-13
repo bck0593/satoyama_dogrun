@@ -11,21 +11,16 @@ import { StatusPill } from "@/src/components/status-pill";
 import { useAuth } from "@/src/contexts/auth-context";
 import { useCurrentStats } from "@/src/hooks/use-current-stats";
 import { useUserReservations } from "@/src/hooks/use-user-reservations";
-import { todayDateString } from "@/src/lib/date-utils";
+import { formatClockJa, todayDateString } from "@/src/lib/date-utils";
 import { getCheckedInReservation } from "@/src/lib/member-readiness";
 import {
   formatReservationDate,
   getUpcomingReservation,
   PAYMENT_STATUS_LABEL,
+  paymentStatusTone,
   RESERVATION_STATUS_LABEL,
+  reservationStatusTone,
 } from "@/src/lib/reservation-display";
-
-function formatTimestamp(value?: string) {
-  if (!value) return "更新待ち";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "更新待ち";
-  return date.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
-}
 
 function congestionSummary(congestion?: string) {
   switch (congestion) {
@@ -59,34 +54,6 @@ function congestionSummary(congestion?: string) {
         detail: "最新の利用状況を取得しています。",
         tone: "neutral" as const,
       };
-  }
-}
-
-function reservationStatusTone(status: string) {
-  switch (status) {
-    case "confirmed":
-    case "checked_in":
-      return "success" as const;
-    case "pending_payment":
-      return "warning" as const;
-    case "cancelled":
-    case "no_show":
-      return "danger" as const;
-    default:
-      return "neutral" as const;
-  }
-}
-
-function paymentStatusTone(status: string) {
-  switch (status) {
-    case "paid":
-      return "success" as const;
-    case "unpaid":
-      return "warning" as const;
-    case "failed":
-      return "danger" as const;
-    default:
-      return "neutral" as const;
   }
 }
 
@@ -149,7 +116,7 @@ export default function TopPage() {
             </div>
             <div className="rounded-2xl bg-[#fff9ec] px-3 py-3">
               <p className="text-xs font-semibold text-[#87672f]">最終更新</p>
-              <p className="mt-1 text-center text-xl font-black text-[#946f24]">{formatTimestamp(stats?.timestamp)}</p>
+              <p className="mt-1 text-center text-xl font-black text-[#946f24]">{formatClockJa(stats?.timestamp, "更新待ち")}</p>
             </div>
           </div>
 

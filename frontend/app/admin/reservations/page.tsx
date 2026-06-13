@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { ReservationCancelDialog } from "@/src/components/reservation-cancel-dialog";
 import { apiClient } from "@/src/lib/api";
+import { formatDateTimeJa } from "@/src/lib/date-utils";
 import {
   canCancelReservation,
   CANCELLATION_ROLE_LABEL,
@@ -16,19 +17,6 @@ type Member = UserProfile & { dog_count: number };
 
 function formatDateTime(date: string, time: string) {
   return `${date} ${time.slice(0, 5)}`;
-}
-
-function formatTimestamp(value: string | null) {
-  if (!value) return "-";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "-";
-  return date.toLocaleString("ja-JP", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 export default function AdminReservationsPage() {
@@ -181,7 +169,7 @@ export default function AdminReservationsPage() {
                     <td className="px-3 py-2">
                       {reservation.cancelled_at ? (
                         <div className="text-xs text-slate-700">
-                          <p>日時: {formatTimestamp(reservation.cancelled_at)}</p>
+                          <p>日時: {formatDateTimeJa(reservation.cancelled_at)}</p>
                           <p>実行者: {cancelledByLabel}</p>
                           {cancellationRoleLabel ? <p>区分: {cancellationRoleLabel}</p> : null}
                           {reservation.cancel_reason ? <p>理由: {reservation.cancel_reason}</p> : null}

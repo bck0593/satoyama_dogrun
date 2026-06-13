@@ -7,21 +7,7 @@ import { MobilePage } from "@/src/components/mobile-page";
 import { PageHeader } from "@/src/components/page-header";
 import { StatusPill } from "@/src/components/status-pill";
 import { useLiveStatus } from "@/src/hooks/use-live-status";
-
-function formatTimestamp(value?: string) {
-  if (!value) return "--:--";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "--:--";
-  return date.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
-}
-
-function occupancyMessage(rate: number | null) {
-  if (rate === null) return "最新の利用頭数を取得しています。";
-  if (rate < 40) return "いまは比較的ゆったり利用できます。";
-  if (rate < 70) return "通常どおり利用しやすい状況です。";
-  if (rate < 100) return "混み合っているため、来場前の確認をおすすめします。";
-  return "満員です。空きが出るまでお待ちください。";
-}
+import { formatClockJa } from "@/src/lib/date-utils";
 
 export default function LiveStatusPage() {
   const { stats, nextTodayReservation, congestionView, utilizationRate } = useLiveStatus();
@@ -46,7 +32,7 @@ export default function LiveStatusPage() {
               >
                 {congestionView.label}
               </StatusPill>
-              <StatusPill tone="neutral">最終更新 {formatTimestamp(stats?.timestamp)}</StatusPill>
+              <StatusPill tone="neutral">最終更新 {formatClockJa(stats?.timestamp)}</StatusPill>
             </div>
 
             <h2 className="mt-3 text-2xl font-black text-[#153a71]">
@@ -72,7 +58,6 @@ export default function LiveStatusPage() {
             <p className="mt-2 text-sm text-[#587195]">
               利用率 {utilizationRate ?? "--"}% / 最大 {stats?.max_capacity ?? "--"}頭
             </p>
-            <p className="mt-1 text-sm text-[#587195]">{occupancyMessage(utilizationRate)}</p>
 
             <div className="mt-4 grid grid-cols-2 gap-2">
               <Link
@@ -108,7 +93,7 @@ export default function LiveStatusPage() {
                 <Clock3 className="mr-2 h-4 w-4 text-amber-600" />
                 最終更新
               </h2>
-              <p className="mt-3 text-center text-3xl font-black text-gray-900">{formatTimestamp(stats?.timestamp)}</p>
+              <p className="mt-3 text-center text-3xl font-black text-gray-900">{formatClockJa(stats?.timestamp)}</p>
               <p className="mt-1 text-sm text-gray-600">自動更新しています</p>
             </div>
           </section>

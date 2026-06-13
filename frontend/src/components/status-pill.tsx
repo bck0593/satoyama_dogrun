@@ -10,13 +10,15 @@ const toneClassName = {
   neutral: "border-slate-200 bg-slate-50 text-slate-700",
 } as const;
 
+export type StatusTone = keyof typeof toneClassName;
+
 export function StatusPill({
   children,
   tone = "neutral",
   className,
 }: {
   children: React.ReactNode;
-  tone?: keyof typeof toneClassName;
+  tone?: StatusTone;
   className?: string;
 }) {
   return (

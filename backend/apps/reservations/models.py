@@ -110,6 +110,11 @@ class Reservation(models.Model):
     def active_statuses(cls):
         return [cls.Status.PENDING_PAYMENT, cls.Status.CONFIRMED, cls.Status.CHECKED_IN]
 
+    @classmethod
+    def terminal_statuses(cls):
+        """Statuses from which a reservation can no longer be paid for or cancelled."""
+        return [cls.Status.CANCELLED, cls.Status.COMPLETED, cls.Status.NO_SHOW, cls.Status.EXPIRED]
+
     def can_refund(self, refund_window_hours: int) -> bool:
         slot_start = timezone.make_aware(datetime.combine(self.date, self.start_time))
         return timezone.now() <= slot_start - timedelta(hours=refund_window_hours)

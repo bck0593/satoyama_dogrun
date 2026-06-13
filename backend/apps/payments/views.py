@@ -65,12 +65,7 @@ class CreateCheckoutSessionView(APIView):
         if reservation.payment_status == Reservation.PaymentStatus.PAID:
             return Response({"detail": "この予約はすでに決済済みです。"}, status=status.HTTP_400_BAD_REQUEST)
 
-        if reservation.status in [
-            Reservation.Status.CANCELLED,
-            Reservation.Status.COMPLETED,
-            Reservation.Status.NO_SHOW,
-            Reservation.Status.EXPIRED,
-        ]:
+        if reservation.status in Reservation.terminal_statuses():
             return Response({"detail": "この予約は決済できない状態です。"}, status=status.HTTP_400_BAD_REQUEST)
 
         idempotency_key = f"checkout-{reservation.id}-{uuid4().hex}"

@@ -3,18 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { apiClient } from "@/src/lib/api";
+import { sizeCategoryLabel } from "@/src/lib/dog-form";
 import type { AdminUsageEntry } from "@/src/lib/types";
 
 function formatDateTime(value: string | null) {
   if (!value) return "-";
   return new Date(value).toLocaleString("ja-JP");
-}
-
-function formatSizeCategory(value: AdminUsageEntry["size_category_snapshot"]) {
-  if (value === "small") return "小型犬";
-  if (value === "medium") return "中型犬";
-  if (value === "large") return "大型犬";
-  return value;
 }
 
 function formatEntryStatus(entry: AdminUsageEntry) {
@@ -32,7 +26,7 @@ function downloadCsv(entries: AdminUsageEntry[]) {
     entry.user_display_name,
     entry.dog_name_snapshot,
     entry.breed_snapshot,
-    formatSizeCategory(entry.size_category_snapshot),
+    sizeCategoryLabel(entry.size_category_snapshot),
     entry.weight_kg_snapshot,
     String(entry.usage_minutes),
     entry.status,
@@ -213,7 +207,7 @@ export default function AdminCheckinsPage() {
                   </td>
                   <td className="px-3 py-3">{entry.breed_snapshot}</td>
                   <td className="px-3 py-3">
-                    <p>{formatSizeCategory(entry.size_category_snapshot)}</p>
+                    <p>{sizeCategoryLabel(entry.size_category_snapshot)}</p>
                     <p className="mt-1 text-xs text-slate-500">{entry.weight_kg_snapshot}kg</p>
                   </td>
                   <td className="px-3 py-3 font-semibold text-slate-900">{formatEntryStatus(entry)}</td>
