@@ -1,25 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { Dog as DogIcon, ShieldAlert, UserCircle2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { CalendarClock, CreditCard, Dog as DogIcon, History, LogOut, Plus, ShieldAlert, UserCircle2 } from "lucide-react";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 import { AuthGuard } from "@/src/components/auth-guard";
 import { DogEditForm } from "@/src/components/dog-edit-form";
+import { EmptyState } from "@/src/components/empty-state";
 import { MobilePage } from "@/src/components/mobile-page";
 import { PageHeader } from "@/src/components/page-header";
+import { SectionHeading } from "@/src/components/section-heading";
+import { ListSkeleton } from "@/src/components/skeletons";
 import { StatusPill } from "@/src/components/status-pill";
 import { useAuth } from "@/src/contexts/auth-context";
 import { apiClient } from "@/src/lib/api";
 import { formatDateTimeJa, todayDateString } from "@/src/lib/date-utils";
-import {
-  sizeCategoryLabel,
-  vaccineStatusLabel,
-  vaccineStatusTone,
-  type DogGender,
-  type DogSizeCategory,
-} from "@/src/lib/dog-form";
-import { isSuspended } from "@/src/lib/member-readiness";
+import { sizeCategoryLabel, type DogGender, type DogSizeCategory } from "@/src/lib/dog-form";
+import { DOG_READINESS_HINT_CLASS, getDogReadiness, isSuspended, sortDogsByReadiness } from "@/src/lib/member-readiness";
 import {
   getReservationEndValue,
   paymentHistoryStatusLabel,
@@ -33,7 +31,8 @@ import { HighlightedReservationTable } from "./_components/highlighted-reservati
 import { ReservationHistoryCard } from "./_components/reservation-history-card";
 
 export default function MyPage() {
-  const { user, refreshProfile } = useAuth();
+  const router = useRouter();
+  const { user, refreshProfile, logout } = useAuth();
   const [dogs, setDogs] = useState<Dog[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [payments, setPayments] = useState<PaymentHistoryItem[]>([]);
@@ -51,6 +50,7 @@ export default function MyPage() {
   const [deletingDogId, setDeletingDogId] = useState<number | null>(null);
 
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [showPastReservations, setShowPastReservations] = useState(false);
@@ -59,15 +59,19 @@ export default function MyPage() {
 
   const load = useCallback(async () => {
     setError(null);
-    const [dogData, reservationData, paymentData] = await Promise.all([
-      apiClient.getDogs(),
-      apiClient.getReservations(),
-      apiClient.getPaymentHistory(),
-    ]);
+    try {
+      const [dogData, reservationData, paymentData] = await Promise.all([
+        apiClient.getDogs(),
+        apiClient.getReservations(),
+        apiClient.getPaymentHistory(),
+      ]);
 
-    setDogs(dogData.filter((dog) => dog.is_active));
-    setReservations(reservationData);
-    setPayments(paymentData);
+      setDogs(dogData.filter((dog) => dog.is_active));
+      setReservations(reservationData);
+      setPayments(paymentData);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -89,31 +93,24 @@ export default function MyPage() {
         .sort((a, b) => toDateTimeValue(b.date, b.start_time) - toDateTimeValue(a.date, a.start_time)),
     [reservations],
   );
-  const currentAndUpcomingReservations = useMemo(() => {
+  // 「予約中・これから」= 利用中、または これから利用予定の有効な予約（早い順）
+  const upcomingReservations = useMemo(() => {
     const nowValue = Date.now();
-    return sortedReservations.filter((reservation) => {
-      if (reservation.status === "checked_in") return true;
-      if (!["pending_payment", "confirmed"].includes(reservation.status)) return false;
-      return getReservationEndValue(reservation) >= nowValue;
-    });
+    return sortedReservations
+      .filter((reservation) => {
+        if (reservation.status === "checked_in") return true;
+        if (!["pending_payment", "confirmed"].includes(reservation.status)) return false;
+        return getReservationEndValue(reservation) >= nowValue;
+      })
+      .sort((a, b) => toDateTimeValue(a.date, a.start_time) - toDateTimeValue(b.date, b.start_time));
   }, [sortedReservations]);
-  const highlightedReservation = useMemo(() => {
-    const checkedInReservation = currentAndUpcomingReservations.find((reservation) => reservation.status === "checked_in");
-    if (checkedInReservation) return checkedInReservation;
-
-    const nextReservation = [...currentAndUpcomingReservations].sort(
-      (a, b) => toDateTimeValue(a.date, a.start_time) - toDateTimeValue(b.date, b.start_time),
-    )[0];
-
-    return nextReservation ?? sortedReservations[0] ?? null;
-  }, [currentAndUpcomingReservations, sortedReservations]);
-  const remainingHistoryReservations = useMemo(
-    () =>
-      highlightedReservation
-        ? sortedReservations.filter((reservation) => reservation.id !== highlightedReservation.id)
-        : sortedReservations,
-    [highlightedReservation, sortedReservations],
-  );
+  const nextReservation = upcomingReservations[0] ?? null;
+  const otherUpcomingReservations = useMemo(() => upcomingReservations.slice(1), [upcomingReservations]);
+  // 「過去の履歴」= 上記以外（利用完了・キャンセル・過去日など）。最新順。
+  const pastReservations = useMemo(() => {
+    const upcomingIds = new Set(upcomingReservations.map((reservation) => reservation.id));
+    return sortedReservations.filter((reservation) => !upcomingIds.has(reservation.id));
+  }, [sortedReservations, upcomingReservations]);
   const sortedPayments = useMemo(
     () =>
       [...payments].sort(
@@ -145,6 +142,11 @@ export default function MyPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    router.replace("/login");
   };
 
   const startEditDog = (dog: Dog) => {
@@ -263,9 +265,7 @@ export default function MyPage() {
           ) : null}
 
           <section id="profile-section" className="section-card">
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-base font-bold text-gray-900">飼い主情報</h2>
-            </div>
+            <SectionHeading icon={UserCircle2} title="飼い主情報" className="mb-3" />
             <form className="space-y-3" onSubmit={saveProfile}>
               <label className="block text-xs font-semibold text-gray-600">
                 表示名
@@ -307,15 +307,28 @@ export default function MyPage() {
           </section>
 
           <section id="dogs-section" className="section-card">
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-base font-bold text-gray-900">登録済みの犬</h2>
-              <Link href="/dog-registration" className="text-sm font-semibold text-orange-600">
-                編集
-              </Link>
-            </div>
+            <SectionHeading
+              icon={DogIcon}
+              title="登録済みの犬"
+              className="mb-3"
+              action={
+                <Link
+                  href="/dog-registration"
+                  className="inline-flex items-center gap-1 text-sm font-semibold text-orange-600 hover:underline"
+                >
+                  <Plus className="h-4 w-4" aria-hidden="true" />
+                  追加
+                </Link>
+              }
+            />
+
+            {loading && !dogs.length ? <ListSkeleton rows={2} /> : null}
 
             <div className="space-y-2">
-              {dogs.map((dog) => (
+              {sortDogsByReadiness(dogs, today).map((dog) => {
+                const readiness = getDogReadiness(dog, today);
+                const hintClass = DOG_READINESS_HINT_CLASS[readiness.code];
+                return (
                 <div key={dog.id} className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm">
                   <div className="flex items-center justify-between gap-3">
                     <div>
@@ -325,9 +338,7 @@ export default function MyPage() {
                           <DogIcon className="mr-1 h-3 w-3" />
                           {sizeCategoryLabel(dog.size_category)}
                         </StatusPill>
-                        <StatusPill tone={vaccineStatusTone(dog.vaccine_approval_status)}>
-                          ワクチン確認: {vaccineStatusLabel(dog.vaccine_approval_status)}
-                        </StatusPill>
+                        <StatusPill tone={readiness.tone}>{readiness.label}</StatusPill>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -353,18 +364,24 @@ export default function MyPage() {
                   </div>
                   <p className="mt-2 text-gray-600">
                     {dog.breed}
-                    {dog.breed_group ? ` (${dog.breed_group})` : ""} / {dog.weight_kg}kg / {dog.size_category}
+                    {dog.breed_group ? ` (${dog.breed_group})` : ""} / {dog.weight_kg}kg / {sizeCategoryLabel(dog.size_category)}
                   </p>
-                  {dog.vaccine_expires_on < today ? (
-                    <div className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
-                      <p className="text-xs font-bold text-red-700">ワクチン期限切れ: {dog.vaccine_expires_on}</p>
-                      <p className="mt-0.5 text-xs text-red-600">予約には期限の更新が必要です。「編集」から更新してください。</p>
-                    </div>
-                  ) : (
-                    <p className="text-gray-500">ワクチン期限: {dog.vaccine_expires_on}</p>
-                  )}
-                  {dog.vaccine_approval_status === "rejected" && dog.vaccine_review_note ? (
-                    <p className="mt-1 text-xs text-red-600">差し戻し理由: {dog.vaccine_review_note}</p>
+                  <p className="mt-1 text-xs text-gray-500">ワクチン期限: {dog.vaccine_expires_on}</p>
+                  <p className={`mt-2 flex items-start gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium ${hintClass}`}>
+                    {readiness.code === "ready" ? <span aria-hidden="true">✓</span> : null}
+                    <span>{readiness.hint}</span>
+                  </p>
+                  {readiness.code === "expired" ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setConfirmDeleteDogId(null);
+                        startEditDog(dog);
+                      }}
+                      className="mt-2 inline-flex rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white transition active:scale-[0.98]"
+                    >
+                      ワクチン期限を更新する
+                    </button>
                   ) : null}
 
                   {confirmDeleteDogId === dog.id ? (
@@ -403,69 +420,80 @@ export default function MyPage() {
                     />
                   ) : null}
                 </div>
-              ))}
-              {!dogs.length ? (
-                <div className="rounded-xl border border-dashed border-[#cbd8ea] bg-[#f8fbff] p-4 text-center text-sm text-[#587196]">
-                  <p className="font-bold">犬がまだ登録されていません</p>
-                  <p className="mt-1">ワクチン証明と一緒に登録すると、承認後に予約できます。</p>
-                  <Link
-                    href="/dog-registration"
-                    className="mt-3 inline-flex rounded-xl bg-[#0a438d] px-4 py-2 text-sm font-bold text-white"
-                  >
-                    犬を登録する
-                  </Link>
-                </div>
+                );
+              })}
+              {!loading && !dogs.length ? (
+                <EmptyState
+                  icon={DogIcon}
+                  title="予約に使える犬がいません"
+                  description="犬を登録し、ワクチン証明がスタッフに承認されると予約できます。期限切れの犬は「編集」から更新してください。"
+                  action={
+                    <Link
+                      href="/dog-registration"
+                      className="inline-flex rounded-xl bg-[#0a438d] px-4 py-2 text-sm font-bold text-white transition active:scale-[0.98]"
+                    >
+                      犬を登録する
+                    </Link>
+                  }
+                />
               ) : null}
             </div>
           </section>
 
 
-          <section id="history-section" className="section-card">
-            <div className="mb-2 flex items-center gap-2">
-              <UserCircle2 className="h-4 w-4 text-[#0a438d]" />
-              <h2 className="text-base font-bold text-gray-900">利用・利用履歴</h2>
-            </div>
+          <section id="reservations-section" className="section-card">
+            <SectionHeading icon={CalendarClock} title="予約中・これからの予約" className="mb-3" />
             <div className="space-y-2 text-sm">
-              {highlightedReservation ? (
-                <HighlightedReservationTable reservation={highlightedReservation} onCancel={cancelReservation} />
-              ) : (
+              {loading && !sortedReservations.length ? <ListSkeleton rows={2} /> : null}
+              {nextReservation ? (
+                <HighlightedReservationTable reservation={nextReservation} onCancel={cancelReservation} />
+              ) : !loading ? (
                 <div className="rounded-xl border border-dashed border-[#cad8eb] bg-[#f8fbff] p-3 text-sm text-[#587196]">
-                  次の予定はありません。新しい予約を入れると、ここに表示されます。
+                  現在有効な予約はありません。新しい予約を入れると、ここに表示されます。
                 </div>
-              )}
-              {remainingHistoryReservations.length ? (
-                <div className="space-y-2">
+              ) : null}
+              {otherUpcomingReservations.map((reservation) => (
+                <ReservationHistoryCard key={reservation.id} reservation={reservation} onCancel={cancelReservation} />
+              ))}
+            </div>
+          </section>
+
+          <section id="history-section" className="section-card">
+            <SectionHeading icon={History} title="過去の利用履歴" className="mb-3" />
+            <div className="space-y-2 text-sm">
+              {pastReservations.length ? (
+                <>
                   <button
                     type="button"
                     onClick={() => setShowPastReservations((prev) => !prev)}
-                    className="w-full rounded-xl border border-[#c9d8ec] bg-white px-4 py-3 text-sm font-semibold text-[#11417f]"
+                    className="w-full rounded-xl border border-[#c9d8ec] bg-white px-4 py-3 text-sm font-semibold text-[#11417f] transition hover:bg-[#f3f7fd]"
                   >
                     {showPastReservations
-                      ? `過去の利用履歴を閉じる (${remainingHistoryReservations.length}件)`
-                      : `過去の利用履歴を参照する (${remainingHistoryReservations.length}件)`}
+                      ? `過去の利用履歴を閉じる (${pastReservations.length}件)`
+                      : `過去の利用履歴を見る (${pastReservations.length}件)`}
                   </button>
                   {showPastReservations ? (
-                    <div className="rounded-xl border border-gray-200 bg-white p-3">
-                      <div className="space-y-2">
-                        {remainingHistoryReservations.map((reservation) => (
-                          <ReservationHistoryCard
-                            key={reservation.id}
-                            reservation={reservation}
-                            onCancel={cancelReservation}
-                          />
-                        ))}
-                      </div>
+                    <div className="space-y-2">
+                      {pastReservations.map((reservation) => (
+                        <ReservationHistoryCard
+                          key={reservation.id}
+                          reservation={reservation}
+                          onCancel={cancelReservation}
+                        />
+                      ))}
                     </div>
                   ) : null}
-                </div>
+                </>
+              ) : !loading ? (
+                <p className="text-sm text-gray-500">過去の利用履歴はまだありません。</p>
               ) : null}
-              {!sortedReservations.length ? <p className="text-sm text-gray-500">利用履歴がありません。</p> : null}
             </div>
           </section>
 
           <section className="section-card">
-            <h2 className="mb-2 text-base font-bold text-gray-900">支払い履歴</h2>
+            <SectionHeading icon={CreditCard} title="支払い履歴" className="mb-3" />
             <div className="space-y-2 text-sm">
+              {loading && !sortedPayments.length ? <ListSkeleton rows={2} /> : null}
               {highlightedPayment ? <HighlightedPaymentTable payment={highlightedPayment} /> : null}
               {remainingPayments.length ? (
                 <div className="space-y-2">
@@ -502,7 +530,9 @@ export default function MyPage() {
                   ) : null}
                 </div>
               ) : null}
-              {!sortedPayments.length ? <p className="text-sm text-gray-500">支払い履歴がありません。</p> : null}
+              {!loading && !sortedPayments.length ? (
+                <p className="text-sm text-gray-500">支払い履歴がありません。</p>
+              ) : null}
             </div>
           </section>
 
@@ -511,6 +541,23 @@ export default function MyPage() {
               <p className="font-semibold">{error}</p>
             </section>
           ) : null}
+
+          <section className="section-card">
+            <SectionHeading icon={LogOut} title="アカウント" className="mb-3" />
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#d3dded] bg-white px-4 py-3 text-sm font-bold text-[#11417f] transition hover:bg-[#f3f7fd] active:scale-[0.99]"
+            >
+              <LogOut className="h-4 w-4" aria-hidden="true" />
+              ログアウト
+            </button>
+            {user ? (
+              <p className="mt-2 text-center text-xs text-gray-400">
+                {user.display_name || user.username} としてログイン中
+              </p>
+            ) : null}
+          </section>
         </div>
       </MobilePage>
     </AuthGuard>

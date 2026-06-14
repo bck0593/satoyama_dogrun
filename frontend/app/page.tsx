@@ -5,8 +5,11 @@ import Link from "next/link";
 import { CalendarCheck2, ChevronRight, Clock3, User } from "lucide-react";
 import { useMemo } from "react";
 
+import { EmptyState } from "@/src/components/empty-state";
 import { HomeHeroSlider } from "@/src/components/home-hero-slider";
 import { MobilePage } from "@/src/components/mobile-page";
+import { SectionHeading } from "@/src/components/section-heading";
+import { SkeletonBlock } from "@/src/components/skeletons";
 import { StatusPill } from "@/src/components/status-pill";
 import { useAuth } from "@/src/contexts/auth-context";
 import { useCurrentStats } from "@/src/hooks/use-current-stats";
@@ -97,13 +100,8 @@ export default function TopPage() {
         <HomeHeroSlider />
 
         <section className="section-card">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-base font-black text-[#15396e]">いまの利用状況</h2>
-              <p className="mt-1 text-sm text-[#516d95]">{crowd.detail}</p>
-            </div>
-            <StatusPill tone={crowd.tone}>{crowd.label}</StatusPill>
-          </div>
+          <SectionHeading title="いまの利用状況" action={<StatusPill tone={crowd.tone}>{crowd.label}</StatusPill>} />
+          <p className="mt-2 text-sm text-[#516d95]">{crowd.detail}</p>
 
           <div className="mt-4 grid grid-cols-3 gap-3">
             <div className="rounded-2xl bg-[#f4f8ff] px-3 py-3">
@@ -127,21 +125,29 @@ export default function TopPage() {
         </section>
 
         <section className="section-card">
-          <div className="flex items-center gap-2">
-            <CalendarCheck2 className="h-4 w-4 text-[#0a438d]" />
-            <h2 className="text-base font-black text-[#15396e]">
-              {checkedInReservation
+          <SectionHeading
+            icon={CalendarCheck2}
+            title={
+              checkedInReservation
                 ? `${user?.display_name || "会員"}の現在の利用`
                 : user
                   ? `${user.display_name || "会員"}の次の予定`
-                  : "次の予定"}
-            </h2>
-          </div>
+                  : "次の予定"
+            }
+          />
 
           {reservationsLoading ? (
-            <div className="mt-3 rounded-2xl border border-dashed border-[#c8d7ea] bg-[#f8fbff] px-4 py-4">
-              <p className="text-base font-black text-[#163a70]">予約を確認中です。</p>
-              <p className="mt-1 text-sm text-[#5b7397]">最新の予約情報を読み込んでいます。</p>
+            <div className="mt-3 rounded-2xl border border-[#dbe6f5] bg-[#f8fbff] px-4 py-4">
+              <div className="flex gap-2">
+                <SkeletonBlock className="h-6 w-16 rounded-full" />
+                <SkeletonBlock className="h-6 w-20 rounded-full" />
+              </div>
+              <SkeletonBlock className="mt-3 h-6 w-2/3" />
+              <SkeletonBlock className="mt-2 h-3 w-1/2" />
+              <div className="mt-4 flex gap-2">
+                <SkeletonBlock className="h-11 flex-1 rounded-xl" />
+                <SkeletonBlock className="h-11 flex-1 rounded-xl" />
+              </div>
             </div>
           ) : reservationsError ? (
             <div className="mt-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-4">
@@ -256,32 +262,33 @@ export default function TopPage() {
               </div>
             </div>
           ) : (
-            <div className="mt-3 rounded-2xl border border-dashed border-[#c8d7ea] bg-[#f8fbff] px-4 py-4">
-              <p className="text-base font-black text-[#163a70]">まだ予約はありません。</p>
-              <p className="mt-1 text-sm text-[#5b7397]">日付と犬を選ぶだけで、そのまま予約できます。</p>
-              <div className="mt-4 flex gap-2">
-                <Link
-                  href={user ? "/reservation" : "/login"}
-                  className="inline-flex flex-1 items-center justify-center rounded-xl bg-[#0a438d] px-4 py-3 text-sm font-bold text-white"
-                >
-                  {user ? "予約する" : "ログインする"}
-                </Link>
-                <Link
-                  href="/live-status"
-                  className="inline-flex flex-1 items-center justify-center rounded-xl border border-[#c9d8ec] bg-white px-4 py-3 text-sm font-bold text-[#11417f]"
-                >
-                  利用状況を見る
-                </Link>
-              </div>
-            </div>
+            <EmptyState
+              className="mt-3"
+              icon={CalendarCheck2}
+              title="まだ予約はありません"
+              description="日付と犬を選ぶだけで、そのまま予約できます。"
+              action={
+                <div className="flex w-full gap-2">
+                  <Link
+                    href={user ? "/reservation" : "/login"}
+                    className="inline-flex flex-1 items-center justify-center rounded-xl bg-[#0a438d] px-4 py-3 text-sm font-bold text-white transition active:scale-[0.98]"
+                  >
+                    {user ? "予約する" : "ログインする"}
+                  </Link>
+                  <Link
+                    href="/live-status"
+                    className="inline-flex flex-1 items-center justify-center rounded-xl border border-[#c9d8ec] bg-white px-4 py-3 text-sm font-bold text-[#11417f] transition active:scale-[0.98]"
+                  >
+                    利用状況を見る
+                  </Link>
+                </div>
+              }
+            />
           )}
         </section>
 
         <section className="section-card">
-          <div className="flex items-center gap-2">
-            <Clock3 className="h-4 w-4 text-[#d58a00]" />
-            <h2 className="text-base font-black text-[#15396e]">利用前の注意</h2>
-          </div>
+          <SectionHeading icon={Clock3} title="利用前の注意" />
           <ul className="mt-3 space-y-2 text-sm leading-6 text-[#4f698f]">
             <li>ワクチン証明が承認済みの犬のみ予約して入場できます。</li>
             <li>本日の予約がある場合は、現地でQRチェックインに進んでください。</li>

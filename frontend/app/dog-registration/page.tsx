@@ -2,11 +2,16 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Dog as DogIcon, PlusCircle } from "lucide-react";
 
 import { AuthGuard } from "@/src/components/auth-guard";
 import { DogEditForm } from "@/src/components/dog-edit-form";
+import { EmptyState } from "@/src/components/empty-state";
 import { MobilePage } from "@/src/components/mobile-page";
 import { PageHeader } from "@/src/components/page-header";
+import { SectionHeading } from "@/src/components/section-heading";
+import { ListSkeleton } from "@/src/components/skeletons";
+import { StatusPill } from "@/src/components/status-pill";
 import { useDogs } from "@/src/hooks/use-dogs";
 import { apiClient } from "@/src/lib/api";
 import { todayDateString } from "@/src/lib/date-utils";
@@ -15,23 +20,13 @@ import {
   DOG_GENDER_OPTIONS,
   DOG_SIZE_OPTIONS,
   INITIAL_DOG_FORM,
+  sizeCategoryLabel,
   toDogCreatePayload,
   type DogGender,
   type DogSizeCategory,
 } from "@/src/lib/dog-form";
+import { DOG_READINESS_HINT_CLASS, getDogReadiness, sortDogsByReadiness } from "@/src/lib/member-readiness";
 import type { Dog } from "@/src/lib/types";
-
-function approvalLabel(status: "pending" | "approved" | "rejected") {
-  if (status === "approved") return "承認済み ✓";
-  if (status === "rejected") return "差し戻し";
-  return "確認待ち";
-}
-
-function approvalClass(status: "pending" | "approved" | "rejected") {
-  if (status === "approved") return "text-emerald-700";
-  if (status === "rejected") return "text-red-600";
-  return "text-amber-700";
-}
 
 export default function DogRegistrationPage() {
   const router = useRouter();
@@ -43,7 +38,7 @@ export default function DogRegistrationPage() {
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const { dogs, setDogs, error: dogsError, reload } = useDogs();
+  const { dogs, setDogs, loading: dogsLoading, error: dogsError, reload } = useDogs({ activeOnly: true });
 
   // ── 編集 ──
   const [editingDogId, setEditingDogId] = useState<number | null>(null);
@@ -156,7 +151,7 @@ export default function DogRegistrationPage() {
 
           {/* ── 登録済みの犬 ── */}
           <section className="section-card">
-            <h2 className="text-base font-bold text-gray-900">登録済みの犬</h2>
+            <SectionHeading icon={DogIcon} title="登録済みの犬" />
 
             {notice ? (
               <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
@@ -169,20 +164,25 @@ export default function DogRegistrationPage() {
               </div>
             ) : null}
 
+            {dogsLoading && !dogs.length ? <ListSkeleton className="mt-3" rows={2} /> : null}
+
             <div className="mt-3 space-y-3">
-              {dogs.map((dog) => (
+              {sortDogsByReadiness(dogs, today).map((dog) => {
+                const readiness = getDogReadiness(dog, today);
+                return (
                 <div key={dog.id} className="rounded-xl border border-gray-200 bg-gray-50 px-3 py-3 text-sm">
                   {/* 犬の基本情報 */}
                   <div className="flex items-start justify-between gap-2">
-                    <div>
+                    <div className="min-w-0">
                       <p className="font-bold text-gray-900">{dog.name}</p>
-                      <p className="mt-0.5 text-gray-600">{dog.breed} / {dog.weight_kg}kg / {dog.size_category}</p>
-                      <p className={`mt-0.5 text-xs font-semibold ${approvalClass(dog.vaccine_approval_status)}`}>
-                        ワクチン確認: {approvalLabel(dog.vaccine_approval_status)}
+                      <div className="mt-1 flex flex-wrap gap-2">
+                        <StatusPill tone="neutral">{sizeCategoryLabel(dog.size_category)}</StatusPill>
+                        <StatusPill tone={readiness.tone}>{readiness.label}</StatusPill>
+                      </div>
+                      <p className="mt-1 text-gray-600">
+                        {dog.breed} / {dog.weight_kg}kg
                       </p>
-                      {dog.vaccine_approval_status === "rejected" && dog.vaccine_review_note ? (
-                        <p className="mt-1 text-xs text-red-600">差し戻し理由: {dog.vaccine_review_note}</p>
-                      ) : null}
+                      <p className="mt-0.5 text-xs text-gray-500">ワクチン期限: {dog.vaccine_expires_on}</p>
                     </div>
                     {/* 編集/削除ボタン */}
                     {editingDogId !== dog.id ? (
@@ -208,21 +208,24 @@ export default function DogRegistrationPage() {
                     ) : null}
                   </div>
 
-                  {/* ワクチン期限切れ警告 */}
-                  {dog.vaccine_expires_on < today && editingDogId !== dog.id ? (
-                    <div className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
-                      <p className="text-xs font-bold text-red-700">ワクチン期限切れ: {dog.vaccine_expires_on}</p>
-                      <p className="mt-0.5 text-xs text-red-600">予約できません。期限を更新してください。</p>
-                      <button
-                        type="button"
-                        onClick={() => startEdit(dog)}
-                        className="mt-2 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white"
+                  {editingDogId !== dog.id ? (
+                    <>
+                      <p
+                        className={`mt-2 flex items-start gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium ${DOG_READINESS_HINT_CLASS[readiness.code]}`}
                       >
-                        今すぐ更新
-                      </button>
-                    </div>
-                  ) : dog.vaccine_expires_on >= today && editingDogId !== dog.id ? (
-                    <p className="mt-1 text-xs text-gray-500">ワクチン期限: {dog.vaccine_expires_on}</p>
+                        {readiness.code === "ready" ? <span aria-hidden="true">✓</span> : null}
+                        <span>{readiness.hint}</span>
+                      </p>
+                      {readiness.code === "expired" ? (
+                        <button
+                          type="button"
+                          onClick={() => startEdit(dog)}
+                          className="mt-2 inline-flex rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white transition active:scale-[0.98]"
+                        >
+                          今すぐ更新
+                        </button>
+                      ) : null}
+                    </>
                   ) : null}
 
                   {/* 削除確認 */}
@@ -263,14 +266,21 @@ export default function DogRegistrationPage() {
                     />
                   ) : null}
                 </div>
-              ))}
-              {!dogs.length ? <p className="text-sm text-gray-500">まだ犬登録がありません。</p> : null}
+                );
+              })}
+              {!dogsLoading && !dogs.length ? (
+                <EmptyState
+                  icon={DogIcon}
+                  title="まだ犬が登録されていません"
+                  description="下のフォームから、ワクチン証明と一緒に登録しましょう。"
+                />
+              ) : null}
             </div>
           </section>
 
           {/* ── 新規登録フォーム ── */}
           <section className="section-card">
-            <h2 className="mb-3 text-base font-bold text-gray-900">新しい犬を登録</h2>
+            <SectionHeading icon={PlusCircle} title="新しい犬を登録" className="mb-3" />
             <form className="space-y-3" onSubmit={onSubmit}>
               <input
                 className="w-full rounded-xl border border-gray-300 px-3 py-2"

@@ -10,6 +10,7 @@ const DEFAULT_POLLING_INTERVAL_MS = 15_000;
 export function useLiveStatus(pollingIntervalMs = DEFAULT_POLLING_INTERVAL_MS) {
   const [stats, setStats] = useState<CurrentStats | null>(null);
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -31,6 +32,8 @@ export function useLiveStatus(pollingIntervalMs = DEFAULT_POLLING_INTERVAL_MS) {
       if (reservationsResult.status === "fulfilled") {
         setReservations(reservationsResult.value);
       }
+
+      setLoading(false);
     };
 
     fetchAll().catch(() => null);
@@ -96,5 +99,5 @@ export function useLiveStatus(pollingIntervalMs = DEFAULT_POLLING_INTERVAL_MS) {
     }
   }, [stats?.congestion]);
 
-  return { stats, currentReservation, nextTodayReservation, congestionView, utilizationRate };
+  return { stats, loading, currentReservation, nextTodayReservation, congestionView, utilizationRate };
 }

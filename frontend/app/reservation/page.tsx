@@ -1,14 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarDays, CheckCircle2, CreditCard, Dog, Info, Loader2, ShieldAlert, Users } from "lucide-react";
+import { CalendarDays, CalendarX2, CheckCircle2, CreditCard, Dog, Info, Loader2, ShieldAlert, Users } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Calendar } from "@/components/ui/calendar";
+import { EmptyState } from "@/src/components/empty-state";
 import { StatusPill } from "@/src/components/status-pill";
 import { AuthGuard } from "@/src/components/auth-guard";
 import { MobilePage } from "@/src/components/mobile-page";
 import { PageHeader } from "@/src/components/page-header";
+import { SectionHeading } from "@/src/components/section-heading";
+import { ListSkeleton, SlotGridSkeleton } from "@/src/components/skeletons";
 import { useAuth } from "@/src/contexts/auth-context";
 import { useDogs } from "@/src/hooks/use-dogs";
 import { apiClient } from "@/src/lib/api";
@@ -36,6 +39,7 @@ export default function ReservationPage() {
   const [rainClosed, setRainClosed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const { dogs, loading: dogsLoading, error: dogsError } = useDogs();
@@ -159,6 +163,12 @@ export default function ReservationPage() {
     setPartySize(Math.max(1, Math.floor(next)));
   };
 
+  const handleConfirmBooking = async () => {
+    // createReservationAndPay redirects on success; control only returns on failure.
+    await createReservationAndPay();
+    setConfirmOpen(false);
+  };
+
   return (
     <AuthGuard>
       <MobilePage>
@@ -221,10 +231,7 @@ export default function ReservationPage() {
           ) : null}
 
           <section className="section-card">
-            <h2 className="mb-2 flex items-center text-base font-black text-gray-900">
-              <CalendarDays className="mr-2 h-4 w-4 text-[#0a438d]" />
-              1. 日付を選ぶ
-            </h2>
+            <SectionHeading icon={CalendarDays} title="1. 日付を選ぶ" className="mb-3" />
             <div className="rounded-xl border border-[#cbd8ea] bg-[#f8fbff] p-3">
               <Calendar
                 mode="single"
@@ -240,12 +247,14 @@ export default function ReservationPage() {
           </section>
 
           <section className="section-card">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-base font-black text-gray-900">2. 時間帯を選ぶ</h2>
-              <Link href="/live-status" className="text-sm font-bold text-[#0b438f]">
-                いまの混雑を見る
-              </Link>
-            </div>
+            <SectionHeading
+              title="2. 時間帯を選ぶ"
+              action={
+                <Link href="/live-status" className="text-sm font-bold text-[#0b438f] hover:underline">
+                  いまの混雑を見る
+                </Link>
+              }
+            />
 
             {rainClosed ? (
               <p className="mt-3 rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-orange-700">
@@ -253,15 +262,15 @@ export default function ReservationPage() {
               </p>
             ) : null}
 
-            {availabilityLoading ? (
-              <div className="mt-3 flex items-center gap-2 text-sm text-gray-500">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                空き状況を確認しています...
-              </div>
-            ) : null}
+            {availabilityLoading ? <SlotGridSkeleton /> : null}
 
             {!availabilityLoading && !rainClosed && !slots.length ? (
-              <p className="mt-3 text-sm text-gray-500">この日の予約枠はまだ公開されていません。</p>
+              <EmptyState
+                className="mt-3"
+                icon={CalendarX2}
+                title="この日の予約枠はまだありません"
+                description="別の日付を選ぶか、最新の公開状況をご確認ください。"
+              />
             ) : null}
 
             <div className="mt-3 grid grid-cols-2 gap-2">
@@ -306,11 +315,8 @@ export default function ReservationPage() {
           </section>
 
           <section className="section-card">
-            <h2 className="mb-2 flex items-center text-base font-black text-gray-900">
-              <Dog className="mr-2 h-4 w-4 text-[#0a438d]" />
-              3. 犬を選ぶ
-            </h2>
-            {dogsLoading ? <p className="text-sm text-gray-500">犬情報を読み込んでいます...</p> : null}
+            <SectionHeading icon={Dog} title="3. 犬を選ぶ" className="mb-3" />
+            {dogsLoading ? <ListSkeleton rows={2} /> : null}
             <div className="space-y-2">
               {activeDogs.map((dog) => {
                 const checked = selectedDogIds.includes(dog.id);
@@ -354,15 +360,26 @@ export default function ReservationPage() {
                 );
               })}
 
-              {!dogs.length ? <p className="text-sm text-gray-500">先に犬登録を行ってください。</p> : null}
+              {!dogsLoading && !dogs.length ? (
+                <EmptyState
+                  icon={Dog}
+                  title="まだ犬が登録されていません"
+                  description="ワクチン証明と一緒に登録し、スタッフ承認を受けると予約に使えます。"
+                  action={
+                    <Link
+                      href="/dog-registration"
+                      className="inline-flex rounded-xl bg-[#0a438d] px-4 py-2 text-sm font-bold text-white transition active:scale-[0.98]"
+                    >
+                      犬を登録する
+                    </Link>
+                  }
+                />
+              ) : null}
             </div>
           </section>
 
           <section className="section-card">
-            <h2 className="mb-2 flex items-center text-base font-black text-gray-900">
-              <Users className="mr-2 h-4 w-4 text-[#0a438d]" />
-              来場人数
-            </h2>
+            <SectionHeading icon={Users} title="来場人数" className="mb-2" />
             <p className="mb-2 text-sm text-gray-600">飼い主と同伴者を含めた人数です。</p>
             <input
               type="number"
@@ -374,10 +391,7 @@ export default function ReservationPage() {
           </section>
 
           <section className="brand-card p-5">
-            <div className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-emerald-600" />
-              <h2 className="text-base font-black text-gray-900">予約内容の確認</h2>
-            </div>
+            <SectionHeading icon={CreditCard} title="予約内容の確認" />
 
             <div className="mt-4 space-y-3">
               <div className="rounded-2xl border border-[#d7e2f2] bg-[#f8fbff] px-4 py-3">
@@ -457,20 +471,95 @@ export default function ReservationPage() {
             ) : (
               <button
                 type="button"
-                onClick={createReservationAndPay}
+                onClick={() => setConfirmOpen(true)}
                 disabled={isSubmitDisabled}
-                className="mt-4 w-full rounded-2xl bg-[#0a438d] px-4 py-3 text-sm font-bold text-white disabled:opacity-50"
+                className="mt-4 w-full rounded-2xl bg-[#0a438d] px-4 py-3 text-sm font-bold text-white transition active:scale-[0.99] disabled:opacity-50"
               >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    処理中...
-                  </span>
-                ) : "予約して決済へ進む"}
+                予約内容を確認する
               </button>
             )}
           </section>
         </div>
+
+        {confirmOpen ? (
+          <div
+            className="fixed inset-0 z-[60] overflow-y-auto bg-black/50"
+            role="dialog"
+            aria-modal="true"
+            aria-label="予約内容の確認"
+            onClick={() => {
+              if (!loading) setConfirmOpen(false);
+            }}
+          >
+            <div className="flex min-h-full items-center justify-center p-4">
+            <div
+              className="w-full max-w-md rounded-3xl bg-white p-5 shadow-[0_18px_48px_rgba(8,38,83,0.32)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="flex items-center gap-2">
+                <span className="heading-icon">
+                  <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <h2 className="text-base font-black text-[#13386e]">この内容で予約しますか？</h2>
+              </div>
+              <p className="mt-2 text-sm text-[#557196]">「確定」を押すと決済画面に進みます。決済の完了で予約が確定します。</p>
+
+              <dl className="mt-4 space-y-2 rounded-2xl border border-[#d7e2f2] bg-[#f8fbff] p-4 text-sm">
+                <div className="flex justify-between gap-3">
+                  <dt className="text-[#5b7397]">予約日</dt>
+                  <dd className="font-bold text-[#15396e]">{selectedDateText}</dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-[#5b7397]">時間帯</dt>
+                  <dd className="font-bold text-[#15396e]">
+                    {selectedSlot ? `${selectedSlot.start_time.slice(0, 5)} - ${selectedSlot.end_time.slice(0, 5)}` : "-"}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="shrink-0 text-[#5b7397]">利用犬</dt>
+                  <dd className="text-right font-bold text-[#15396e]">
+                    {selectedDogs.length ? selectedDogs.map((dog) => dog.name).join(" / ") : "-"}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-[#5b7397]">来場人数</dt>
+                  <dd className="font-bold text-[#15396e]">{partySize}人</dd>
+                </div>
+                <div className="flex items-center justify-between gap-3 border-t border-[#dbe6f5] pt-2">
+                  <dt className="text-[#5b7397]">お支払い</dt>
+                  <dd className="text-lg font-black text-emerald-700">{amount.toLocaleString()}円</dd>
+                </div>
+              </dl>
+
+              <div className="mt-4 flex gap-2">
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => setConfirmOpen(false)}
+                  className="flex-1 rounded-2xl border border-[#c9d8ec] bg-white px-4 py-3 text-sm font-bold text-[#11417f] transition active:scale-[0.99] disabled:opacity-50"
+                >
+                  戻る
+                </button>
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={handleConfirmBooking}
+                  className="flex-1 rounded-2xl bg-[#0a438d] px-4 py-3 text-sm font-bold text-white transition active:scale-[0.99] disabled:opacity-60"
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      処理中...
+                    </span>
+                  ) : (
+                    "確定して決済へ"
+                  )}
+                </button>
+              </div>
+            </div>
+            </div>
+          </div>
+        ) : null}
       </MobilePage>
     </AuthGuard>
   );

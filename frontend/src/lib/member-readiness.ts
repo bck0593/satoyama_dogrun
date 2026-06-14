@@ -1,6 +1,86 @@
+import type { StatusTone } from "@/src/components/status-pill";
 import { todayDateString } from "@/src/lib/date-utils";
 import { getUpcomingReservation, toDateTimeValue } from "@/src/lib/reservation-display";
 import type { Dog, Reservation, UserProfile } from "@/src/lib/types";
+
+export type DogReadinessCode = "ready" | "pending" | "rejected" | "expired";
+
+export type DogReadiness = {
+  code: DogReadinessCode;
+  label: string;
+  tone: StatusTone;
+  hint: string;
+};
+
+/** Soft "callout box" classes for a dog's readiness hint, keyed by readiness code. */
+export const DOG_READINESS_HINT_CLASS: Record<DogReadinessCode, string> = {
+  ready: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  pending: "border-amber-200 bg-amber-50 text-amber-800",
+  expired: "border-red-200 bg-red-50 text-red-700",
+  rejected: "border-red-200 bg-red-50 text-red-700",
+};
+
+/** Display order: bookable dogs first, then waiting, then those needing action. */
+const READINESS_RANK: Record<DogReadinessCode, number> = {
+  ready: 0,
+  pending: 1,
+  expired: 2,
+  rejected: 3,
+};
+
+type ReadinessDog = Pick<Dog, "vaccine_approval_status" | "vaccine_expires_on" | "vaccine_review_note" | "name">;
+
+/** Sort dogs so bookable (予約OK) ones come first; ties broken by name. */
+export function sortDogsByReadiness<T extends ReadinessDog>(dogs: T[], today: string = todayDateString()): T[] {
+  return [...dogs].sort((a, b) => {
+    const rankDiff = READINESS_RANK[getDogReadiness(a, today).code] - READINESS_RANK[getDogReadiness(b, today).code];
+    if (rankDiff !== 0) return rankDiff;
+    return a.name.localeCompare(b.name, "ja");
+  });
+}
+
+/**
+ * Single source of truth for "can this dog be booked, and if not, why?".
+ * Vaccine review state (pending / rejected) takes priority because it blocks
+ * regardless of the expiry date; an approved dog is then gated on the expiry.
+ */
+export function getDogReadiness(
+  dog: Pick<Dog, "vaccine_approval_status" | "vaccine_expires_on" | "vaccine_review_note">,
+  today: string = todayDateString(),
+): DogReadiness {
+  if (dog.vaccine_approval_status === "rejected") {
+    return {
+      code: "rejected",
+      label: "差し戻し",
+      tone: "danger",
+      hint: dog.vaccine_review_note
+        ? `差し戻し理由: ${dog.vaccine_review_note} 修正して再提出してください。`
+        : "ワクチン証明が差し戻されました。修正して再提出してください。",
+    };
+  }
+  if (dog.vaccine_approval_status === "pending") {
+    return {
+      code: "pending",
+      label: "スタッフ確認中",
+      tone: "warning",
+      hint: "ワクチン証明をスタッフが確認中です。承認されると予約に使えます。",
+    };
+  }
+  if (dog.vaccine_expires_on < today) {
+    return {
+      code: "expired",
+      label: "ワクチン期限切れ",
+      tone: "danger",
+      hint: "ワクチン期限が切れています。期限を更新すると、再び予約に使えます。",
+    };
+  }
+  return {
+    code: "ready",
+    label: "予約OK",
+    tone: "success",
+    hint: "この犬で予約できます。",
+  };
+}
 
 type PrimaryAction = {
   href: string;

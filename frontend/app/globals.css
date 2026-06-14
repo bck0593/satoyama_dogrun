@@ -125,6 +125,58 @@
   @apply h-4 w-4 text-[#0d4089];
 }
 
+/* ──────────────────────────────────────────────
+   FC今治 design system — navy (#003e8a) × yellow (#ffd100)
+   ────────────────────────────────────────────── */
+
+/* Small uppercase label that sits above a title. */
+.eyebrow {
+  @apply text-[11px] font-bold uppercase tracking-[0.16em] text-[#8093b4];
+}
+
+/* Short yellow rule used as a brand accent under eyebrows / headings. */
+.accent-rule {
+  height: 3px;
+  width: 2.25rem;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #ffd84d, #ffc400);
+}
+
+/* Vertical yellow bar used inside section headings. */
+.accent-bar {
+  @apply inline-block h-5 w-[3px] shrink-0 rounded-full;
+  background: linear-gradient(180deg, #ffd84d, #ffc400);
+}
+
+/* Compact navy chip that holds a section-heading icon. */
+.heading-icon {
+  @apply inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#eaf1fb] text-[#0a438d];
+}
+
+/* Hero / feature panel with the brand navy gradient. */
+.brand-hero {
+  background:
+    radial-gradient(120% 120% at 85% -10%, rgba(255, 209, 0, 0.16) 0%, rgba(255, 209, 0, 0) 45%),
+    linear-gradient(150deg, #0a4598 0%, #083a82 55%, #0b2f67 100%);
+}
+
+/* Branded shimmer skeleton (falls back to static block under reduced-motion). */
+.skeleton {
+  @apply relative overflow-hidden rounded-lg bg-[#e3ebf6];
+}
+.skeleton::after {
+  content: "";
+  @apply absolute inset-0 -translate-x-full;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 @keyframes revealUp {
   from {
     opacity: 0;

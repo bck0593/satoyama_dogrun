@@ -11,7 +11,7 @@ export function PageHeader({
   backHref?: string;
 }) {
   return (
-    <div className="bg-gradient-to-br from-[#083a82] to-[#0b2f67] px-4 pb-6 pt-8 text-white">
+    <div className="brand-hero px-4 pb-6 pt-8 text-white">
       <div className="mb-3 flex items-center gap-2">
         {backHref ? (
           <Link

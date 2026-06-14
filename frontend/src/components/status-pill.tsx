@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 
 const toneClassName = {
   brand: "border-[#bfd4f2] bg-[#eef5ff] text-[#0b428d]",
+  accent: "border-[#ffe187] bg-[#fff8df] text-[#8a6a00]",
   success: "border-emerald-200 bg-emerald-50 text-emerald-800",
   warning: "border-amber-200 bg-amber-50 text-amber-800",
   danger: "border-red-200 bg-red-50 text-red-700",
